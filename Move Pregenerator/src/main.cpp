@@ -1,19 +1,18 @@
-﻿#include "pch.h"
-#include "types.h"
-#include "tables.h"
+﻿#include "types.h"
+#include "Tables.h"
 #include "magic.h"
 
-using namespace types;
+using namespace Types;
 
 int main()
 {
-	U64 magics[64];
-	U8 indexBits[64];
-	magic::generateBishopMagics(magics, indexBits);
+	uint64_t magics[64];
+	uint8_t indexBits[64];
+	magic::GenerateBishopMagics(magics, indexBits);
 	PrintBitboardArray(magics);
 	PrintIndexArray(indexBits);
 	
-	magic::generateRookMagics(magics, indexBits);
+	magic::GenerateRookMagics(magics, indexBits);
 	PrintBitboardArray(magics);
 	PrintIndexArray(indexBits);
 

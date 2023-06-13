@@ -1,9 +1,12 @@
-﻿#include "pch.h"
-#include "tables.h"
+﻿#include "tables.h"
 
 int main()
 {
-	std::cout << "a" << std::endl;
-	initRookMagics();
+	auto* tables = new Tables();
+
+	uint64_t result = tables->GetRookMoves(0, 0x4202000a242020);
+
+	Types:PrintBitboard(result);
+
 	return 0;
 }

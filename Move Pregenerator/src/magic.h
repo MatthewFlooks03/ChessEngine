@@ -1,22 +1,20 @@
 #pragma once
-#include <random>
 #include "types.h"
-#include "tables.h"
-#include <limits.h>
-using namespace types;
+#include "Tables.h"
+using namespace Types;
 
 class magic
 {
 public:
-	static void generateRookMagics(U64 magics[64], U8 indexBits[64]);
-	static void generateBishopMagics(U64 magics[64], U8 indexBits[64]);
+	static void GenerateRookMagics(uint64_t magics[64], uint8_t indexBits[64]);
+	static void GenerateBishopMagics(uint64_t magics[64], uint8_t indexBits[64]);
 
-	static void generateMagics(U64 magics[64], U8 indexBits[64], U64 masks[64], bool rook);
-	static bool tryMakeTable(Magic magic, int square, bool rook);
-	static int getAllBlockers(U64 allBlockers[4096], U64 andMask);
-	static U64 magicIndex(Magic magic, U64 blockers);
+	static void GenerateMagics(uint64_t magics[64], uint8_t indexBits[64], uint64_t masks[64], bool rook);
+	static bool TryMakeTable(const Magic& magic, int square, bool rook);
+	static int GetAllBlockers(uint64_t allBlockers[4096], uint64_t andMask);
+	static uint64_t MagicIndex(const Magic& magic, uint64_t blockers);
 
 
-	static U64 getRookSlidingMoves(int square, U64 blockers);
-	static U64 getBishopSlidingMoves(int square, U64 blockers);
+	static uint64_t GetRookSlidingMoves(int square, uint64_t blockers);
+	static uint64_t GetBishopSlidingMoves(int square, uint64_t blockers);
 };

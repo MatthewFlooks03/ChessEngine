@@ -1,9 +1,11 @@
-#include "pch.h"
 #include "magic.h"
+#include <random>
+#include <map>
 
-int magic::getAllBlockers(U64 allBlockers[4096], U64 andMask)
+
+int magic::GetAllBlockers(uint64_t allBlockers[4096], const uint64_t andMask)
 {
-	U64 currentBlockers = 0;
+	uint64_t currentBlockers = 0;
 	int i = 0;
 	do {
 		currentBlockers |= ~andMask;
@@ -18,31 +20,28 @@ int magic::getAllBlockers(U64 allBlockers[4096], U64 andMask)
 	return i;
 }
 
-U64 magic::magicIndex(Magic magic, U64 blockers)
+uint64_t magic::MagicIndex(const Magic& magic, const uint64_t blockers)
 {
-	blockers = blockers & magic.mask;
-	U64 hash = blockers * magic.magic;
-	U64 index = hash >> (64 - magic.indexBits);
-	return index + magic.offset;
+	return ((blockers & magic.Mask) * magic.MagicNumber)>> (64 - magic.IndexBits);
 }
 
-bool magic::tryMakeTable(Magic magic, int square, bool rook)
+bool magic::TryMakeTable(const Magic& magic, const int square, const bool rook)
 {
-	std::map<U64, U64> moveTable;
+	std::map<uint64_t, uint64_t> moveTable;
 
-	U64 *allBlockers = new U64[4096];
-	int numBlockers = getAllBlockers(allBlockers, magic.mask);
+	auto* allBlockers = new uint64_t[4096];
+	const int numBlockers = GetAllBlockers(allBlockers, magic.Mask);
 
 	for (int n = 0; n < numBlockers; n++) {
-		U64 blockers = allBlockers[n];
-		U64 index = magicIndex(magic, blockers);
-		
-		U64 slidingMoves;
+		const uint64_t blockers = allBlockers[n];
+		uint64_t index = MagicIndex(magic, blockers);
+
+		uint64_t slidingMoves;
 		if (rook) {
-			slidingMoves = getRookSlidingMoves(square, blockers);
+			slidingMoves = GetRookSlidingMoves(square, blockers);
 		}
 		else {
-			slidingMoves = getBishopSlidingMoves(square, blockers);	
+			slidingMoves = GetBishopSlidingMoves(square, blockers);	
 		}
 
 		if (moveTable.count(index) == 1) {
@@ -59,98 +58,99 @@ bool magic::tryMakeTable(Magic magic, int square, bool rook)
 	return true;
 }
 
-U64 magic::getRookSlidingMoves(int square, U64 blockers) {
-	U64 moves = 0;
-	int rank = square / 8;
-	int file = square % 8;
+uint64_t magic::GetRookSlidingMoves(const int square, const uint64_t blockers)
+{
+	uint64_t moves = 0;
+	const int rank = square / 8;
+	const int file = square % 8;
 	// North
 	for (int i = rank + 1; i < 8; i++) {
-		moves |= ((U64)1 << (i * 8 + file));
-		if (blockers & ((U64)1 << (i * 8 + file))) break;
+		moves |= (1ULL << (i * 8 + file));
+		if (blockers & (1ULL << (i * 8 + file))) break;
 	}
 	// South
 	for (int i = rank - 1; i >= 0; i--) {
-		moves |= ((U64)1 << (i * 8 + file));
-		if (blockers & ((U64)1 << (i * 8 + file))) break;
+		moves |= (1ULL << (i * 8 + file));
+		if (blockers & (1ULL << (i * 8 + file))) break;
 	}
 	// East
 	for (int i = file + 1; i < 8; i++) {
-		moves |= ((U64)1 << (rank * 8 + i));
-		if (blockers & ((U64)1 << (rank * 8 + i))) break;
+		moves |= (1ULL << (rank * 8 + i));
+		if (blockers & (1ULL << (rank * 8 + i))) break;
 	}
 	// West
 	for (int i = file - 1; i >= 0; i--) {
-		moves |= ((U64)1 << (rank * 8 + i));
-		if (blockers & ((U64)1 << (rank * 8 + i))) break;
+		moves |= (1ULL << (rank * 8 + i));
+		if (blockers & (1ULL << (rank * 8 + i))) break;
 	}
 	return moves;
 }
 
-U64 magic::getBishopSlidingMoves(int square, U64 blockers) {
-	U64 moves = 0;
-	int rank = square / 8;
-	int file = square % 8;
+uint64_t magic::GetBishopSlidingMoves(const int square, const uint64_t blockers)
+{
+	uint64_t moves = 0;
+	const int rank = square / 8;
+	const int file = square % 8;
 	// North East
 	for (int i = 1; i < 8; i++) {
 		if (rank + i > 7 || file + i > 7) break;
-		moves |= ((U64)1 << ((rank + i) * 8 + file + i));
-		if (blockers & ((U64)1 << ((rank + i) * 8 + file + i))) break;
+		moves |= (1ULL << ((rank + i) * 8 + file + i));
+		if (blockers & (1ULL << ((rank + i) * 8 + file + i))) break;
 	}
 	// North West
 	for (int i = 1; i < 8; i++) {
 		if (rank + i > 7 || file - i < 0) break;
-		moves |= ((U64)1 << ((rank + i) * 8 + file - i));
-		if (blockers & ((U64)1 << ((rank + i) * 8 + file - i))) break;
+		moves |= (1ULL << ((rank + i) * 8 + file - i));
+		if (blockers & (1ULL << ((rank + i) * 8 + file - i))) break;
 	}
 	// South East
 	for (int i = 1; i < 8; i++) {
 		if (rank - i < 0 || file + i > 7) break;
-		moves |= ((U64)1 << ((rank - i) * 8 + file + i));
-		if (blockers & ((U64)1 << ((rank - i) * 8 + file + i))) break;
+		moves |= (1ULL << ((rank - i) * 8 + file + i));
+		if (blockers & (1ULL << ((rank - i) * 8 + file + i))) break;
 	}
 	// South West
 	for (int i = 1; i < 8; i++) {
 		if (rank - i < 0 || file - i < 0) break;
-		moves |= ((U64)1 << ((rank - i) * 8 + file - i));
-		if (blockers & ((U64)1 << ((rank - i) * 8 + file - i))) break;
+		moves |= (1ULL << ((rank - i) * 8 + file - i));
+		if (blockers & (1ULL << ((rank - i) * 8 + file - i))) break;
 	}
 	return moves;
 }
 
-void magic::generateRookMagics(U64 magics[64], U8 indexBits[64]) {
-	U64 masks[64];
-	tables::rookMasks(masks);
+void magic::GenerateRookMagics(uint64_t magics[64], uint8_t indexBits[64]) {
+	uint64_t masks[64];
+	Tables::RookMasks(masks);
 
-	generateMagics(magics, indexBits, masks, true);
+	GenerateMagics(magics, indexBits, masks, true);
 }
 
-void magic::generateBishopMagics(U64 magics[64], U8 indexBits[64]) {
-	U64 masks[64];
-	tables::bishopMasks(masks);
+void magic::GenerateBishopMagics(uint64_t magics[64], uint8_t indexBits[64]) {
+	uint64_t masks[64];
+	Tables::BishopMasks(masks);
 
-	generateMagics(magics, indexBits, masks, false);
+	GenerateMagics(magics, indexBits, masks, false);
 }
 
-void magic::generateMagics(U64 magics[64], U8 indexBits[64], U64 masks[64], bool rook) {
-	Magic magic;
-
+void magic::GenerateMagics(uint64_t magics[64], uint8_t indexBits[64], uint64_t masks[64], bool rook) {
 	for (int square = 0; square < 64; square++) {
-		magic.mask = masks[square];
+		Magic magic;
+		magic.Mask = masks[square];
 
-		U8 bits;
-		U64 var = magic.mask;
+		uint8_t bits;
+		uint64_t var = magic.Mask;
 		for (bits = 0; var != 0; ++bits) var >>= 1;
 
-		magic.indexBits = bits;
+		magic.IndexBits = bits;
 		indexBits[square] = bits;
 
 		do {
 			std::random_device rd;
 			std::mt19937_64 eng(rd());
-			std::uniform_int_distribution<U64> distr;
-			magic.magic = distr(eng) & distr(eng) & distr(eng);
-		} while (tryMakeTable(magic, square, rook));
+			std::uniform_int_distribution<uint64_t> distribution;
+			magic.MagicNumber = distribution(eng) & distribution(eng) & distribution(eng);
+		} while (TryMakeTable(magic, square, rook));
 
-		magics[square] = magic.magic;
+		magics[square] = magic.MagicNumber;
 	}
 }

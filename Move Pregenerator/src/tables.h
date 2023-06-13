@@ -1,17 +1,17 @@
 #pragma once
 #include "types.h"
-using namespace types;
+using namespace Types;
 
-class tables
+class Tables
 {
 public:
-	static const void king(U64 moves[64]);
-	static const void knight(U64 moves[64]);
-	static const void whitePawnAttacks(U64 moves[64]);
-	static const void blackPawnAttacks(U64 moves[64]);
-	static const void whitePawnSingleMoves(U64 moves[64]);
-	static const void blackPawnSingleMoves(U64 moves[64]);
+	static void King(uint64_t moves[64]);
+	static void Knight(uint64_t moves[64]);
+	static void WhitePawnAttacks(uint64_t moves[64]);
+	static void BlackPawnAttacks(uint64_t moves[64]);
+	static void WhitePawnSingleMoves(uint64_t moves[64]);
+	static void BlackPawnSingleMoves(uint64_t moves[64]);
 
-	static const void rookMasks(U64 masks[64]);
-	static const void bishopMasks(U64 masks[64]);
+	static void RookMasks(uint64_t masks[64]);
+	static void BishopMasks(uint64_t masks[64]);
 };

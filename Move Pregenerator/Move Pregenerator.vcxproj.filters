@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="pch.cpp">
+      <Filter>vs</Filter>
+    </ClCompile>
+    <ClCompile Include="src\magic.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\main.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tables.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pch.h">
+      <Filter>vs</Filter>
+    </ClInclude>
+    <ClInclude Include="src\magic.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\tables.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\types.h">
+      <Filter>src</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config">
+      <Filter>vs</Filter>
+    </None>
+    <None Include="PropertySheet.props">
+      <Filter>vs</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="vs">
+      <UniqueIdentifier>{13fd9aa3-a3e9-4e26-8192-5c755f07620e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{80da09be-a77a-4b78-b701-0a1fb16d91bc}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

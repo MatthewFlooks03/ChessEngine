@@ -1,0 +1,58 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="pch.cpp">
+      <Filter>vs</Filter>
+    </ClCompile>
+    <ClCompile Include="src\BitBoards.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\main.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tables.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Types.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pch.h">
+      <Filter>vs</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>vs</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Types.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\BitBoards.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\tables.h">
+      <Filter>src</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="PropertySheet.props">
+      <Filter>vs</Filter>
+    </None>
+    <None Include="packages.config">
+      <Filter>vs</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="vs">
+      <UniqueIdentifier>{195fd776-0ac4-4986-be33-4eb42eb7ee4b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{7612dfc2-928c-4a2a-aca4-a4f9ff88b792}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Chess Engine.rc">
+      <Filter>vs</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

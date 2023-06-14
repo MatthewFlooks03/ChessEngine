@@ -24,4 +24,16 @@ namespace Types {
 	extern uint64_t CountBits(uint64_t bitboard);
 
 	extern void PrintBitboard(uint64_t bitboard);
+
+	class Magic {
+	public:
+		uint8_t Square;
+		bool Rook;
+		uint64_t Mask;
+		uint64_t MagicNumber;
+		uint8_t IndexBits;
+
+		Magic(uint8_t square, bool rook);
+		Magic();
+	};
 };

@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="src\bitBoard.cpp">
+    <ClCompile Include="src\bitboard.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\main.cpp">
@@ -13,6 +13,9 @@
     <ClCompile Include="src\types.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\pregeneration.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
@@ -21,10 +24,13 @@
     <ClInclude Include="src\types.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\bitBoard.h">
+    <ClInclude Include="src\bitboard.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\tables.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\pregeneration.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>

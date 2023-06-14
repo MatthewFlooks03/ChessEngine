@@ -18,4 +18,25 @@ namespace Types {
 		}
 		std::cout << std::endl;
 	}
+
+	Magic::Magic(const uint8_t square, const bool rook)
+	{
+		this->Square = square;
+		this->Rook = rook;
+		this->Mask = 0;
+		this->MagicNumber = 0;
+		this->IndexBits = 0;
+		Tables::GetMagicTables(square, rook, &Mask, &MagicNumber, &IndexBits);
+	}
+
+	Magic::Magic()
+	{
+		this->Square = 0;
+		this->Rook = false;
+		this->Mask = 0;
+		this->MagicNumber = 0;
+		this->IndexBits = 0;
+	}
+
+
 }

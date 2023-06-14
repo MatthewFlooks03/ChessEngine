@@ -1,12 +1,12 @@
 ﻿#include "tables.h"
+#include "pregeneration.h"
 
 int main()
 {
-	auto* tables = new Tables();
+	PreGeneration::Generate();
 
-	uint64_t result = tables->GetRookMoves(0, 0x4202000a242020);
-
-	Types:PrintBitboard(result);
-
+	Tables::RookMagicTesting();
+	Tables::BishopMagicTesting();
+	
 	return 0;
 }

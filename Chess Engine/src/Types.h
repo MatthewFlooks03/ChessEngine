@@ -42,6 +42,18 @@ namespace Types {
 		BlackQueenSide = 1
 	};
 
+	/* Move within uint32_t
+		MSB
+	 * unused (9) 
+	 * piece color (1)
+	 * piece to move (3) (NM-0, K-1, Q-2, R-3, B-4, K-5, P-6)
+	 * piece to capture (3) (NC-0, K-1, Q-2, R-3, B-4, K-5, P-6, E-7)
+	 * castling (4) (NC-0, WK WQ BK BQ)
+	 * initial pos (6) (0-63)
+	 * final pos (6) (0-63)
+		LSB
+	 */
+
 	/* Constants */
 	constexpr uint64_t FILE_A = 0x0101010101010101;
 	constexpr uint64_t FILE_H = 0x8080808080808080;

@@ -31,18 +31,7 @@ public:
 
 	uint64_t operator[](uint8_t bitboard) const;
 	uint64_t& operator[](uint8_t bitboard);
-
-	/*
-		MSB
-	 * unused (9) 
-	 * piece color (1)
-	 * piece to move (3) (NM-0, K-1, Q-2, R-3, B-4, K-5, P-6)
-	 * piece to capture (3) (NC-0, K-1, Q-2, R-3, B-4, K-5, P-6, E-7)
-	 * castling (4) (NC-0, WK WQ BK BQ)
-	 * initial pos (6) (0-63)
-	 * final pos (6) (0-63)
-		LSB
-	 */
+	
 	uint8_t GetPiece(uint8_t square, uint8_t color) const;
 	bool ExecuteMove(uint32_t move);
 	void ReverseMove(uint32_t move);

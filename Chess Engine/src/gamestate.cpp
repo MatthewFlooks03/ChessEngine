@@ -140,8 +140,38 @@ bool GameState::ExecuteMove(const uint32_t move)
 		return false;
 	}
 
-	// TODO: Check for castling through check
-
+	// TODO: Check for castling through check (need attacked squares bitboard)
+	if(castling != 0)
+	{
+		uint8_t rookInitialPos = 0;
+		uint8_t rookFinalPos = 0;
+		bool legal = false;
+		switch(castling)
+		{
+			case Types::CastlingRights::WhiteKingSide:
+				rookInitialPos = 63;
+				rookFinalPos = 61;
+				break;
+			case Types::CastlingRights::WhiteQueenSide:
+				rookInitialPos = 56;
+				rookFinalPos = 59;
+				break;
+			case Types::CastlingRights::BlackKingSide:
+				rookInitialPos = 7;
+				rookFinalPos = 5;
+				break;
+			case Types::CastlingRights::BlackQueenSide:
+				rookInitialPos = 0;
+				rookFinalPos = 3;
+				break;
+			default:
+				throw std::invalid_argument("Invalid castling rights");
+		}
+		uint64_t rookBitboard = this->operator[](Types::Piece::Rook + offset);
+		rookBitboard = Types::ClearBit(rookBitboard, rookInitialPos);
+		rookBitboard = Types::SetBit(rookBitboard, rookFinalPos);
+		this->operator[](Types::Piece::Rook + offset) = rookBitboard;
+	}
 	return true;
 }
 

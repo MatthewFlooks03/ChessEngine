@@ -1,15 +1,15 @@
 #include "movegeneration.h"
 #include "tables.h"
 
-std::list<uint32_t> MoveGeneration::GenerateAllPseudoMoves(const GameState& gameState)
+std::list<uint32_t> MoveGeneration::GetAllPseudoMoves(const GameState& gameState)
 {
 	std::list<uint32_t> moves;
 	for (uint8_t i = Types::King; i <= Types::Pawn; i++)
-		GeneratePseudoMoves(gameState, i, &moves);
+		GetPseudoMoves(gameState, i, &moves);
 	return moves;
 }
 
-void MoveGeneration::GeneratePseudoMoves(const GameState& gameState, const uint8_t piece, std::list<uint32_t>* moves)
+void MoveGeneration::GetPseudoMoves(const GameState& gameState, const uint8_t piece, std::list<uint32_t>* moves)
 {
 	uint64_t bitboard;
 	uint64_t (*getFunction) (const uint8_t, const GameState&) = nullptr;
@@ -99,3 +99,95 @@ void MoveGeneration::GeneratePseudoMoves(const GameState& gameState, const uint8
 		}
 	}
 }
+
+uint64_t MoveGeneration::GetAllAttacks(const GameState& gameState, const uint8_t color)
+{
+	uint64_t bitboard = 0;
+
+	bitboard |= GetKingAttacks(color == Types::Color::White ? gameState.WhiteKing : gameState.BlackKing);
+	bitboard |= GetQueenAttacks(color == Types::Color::White ? gameState.WhiteQueen : gameState.BlackQueen);
+	bitboard |= GetRookAttacks(color == Types::Color::White ? gameState.WhiteRook : gameState.BlackRook);
+	bitboard |= GetBishopAttacks(color == Types::Color::White ? gameState.WhiteBishop : gameState.BlackBishop);
+	bitboard |= GetKnightAttacks(color == Types::Color::White ? gameState.WhiteKnight : gameState.BlackKnight);
+	bitboard |= GetPawnAttacks(color == Types::Color::White ? gameState.WhitePawn : gameState.BlackPawn, color);
+
+	return bitboard;
+}
+
+uint64_t MoveGeneration::GetKingAttacks(const uint64_t bitboard)
+{
+	using namespace Types;
+	uint64_t attacks = North(bitboard);
+	attacks |= South(bitboard);
+	attacks |= East(bitboard);
+	attacks |= West(bitboard);
+	attacks |= NorthEast(bitboard);
+	attacks |= NorthWest(bitboard);
+	attacks |= SouthEast(bitboard);
+	attacks |= SouthWest(bitboard);
+
+	return attacks;
+}
+
+uint64_t MoveGeneration::GetQueenAttacks(const uint64_t bitboard)
+{
+	uint64_t attacks = GetRookAttacks(bitboard);
+	attacks |= GetBishopAttacks(bitboard);
+	return attacks;
+}
+
+uint64_t MoveGeneration::GetRookAttacks(const uint64_t bitboard)
+{
+	std::list<uint8_t> locations = Types::SerialiseBitboard(bitboard);
+	uint64_t attacks = 0;
+	for(auto i = locations.begin(); i != locations.end(); ++i)
+	{
+		attacks |= GetRookAttacks(*i);
+	}
+	return attacks;
+}
+
+uint64_t  MoveGeneration::GetBishopAttacks(const uint64_t bitboard)
+{
+	std::list<uint8_t> locations = Types::SerialiseBitboard(bitboard);
+	uint64_t attacks = 0;
+	for(auto i = locations.begin(); i != locations.end(); ++i)
+	{
+		attacks |= GetBishopAttacks(*i);
+	}
+	return attacks;
+}
+
+uint64_t MoveGeneration::GetKnightAttacks(const uint64_t bitboard)
+{
+	using namespace Types;
+	uint64_t attacks = NorthEast(North(bitboard));
+	attacks |= NorthWest(North(bitboard));
+	attacks |= SouthEast(South(bitboard));
+	attacks |= SouthWest(South(bitboard));
+	attacks |= NorthEast(East(bitboard));
+	attacks |= NorthWest(West(bitboard));
+	attacks |= SouthEast(East(bitboard));
+	attacks |= SouthWest(West(bitboard));
+
+	return attacks;
+}
+
+uint64_t MoveGeneration::GetPawnAttacks(const uint64_t bitboard, uint8_t color)
+{
+	using namespace Types;
+	uint64_t attacks;
+	if(color == White)
+	{
+		attacks = NorthEast(bitboard);
+		attacks |= NorthWest(bitboard);
+	}
+	else
+	{
+		attacks = SouthEast(bitboard);
+		attacks |= SouthWest(bitboard);
+	}
+
+	return attacks;
+}
+

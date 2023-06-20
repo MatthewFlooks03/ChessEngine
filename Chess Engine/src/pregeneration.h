@@ -26,7 +26,7 @@ private:
 	static void GenerateBishopMagics(uint64_t magics[64], uint8_t indexBits[64]);
 
 	static void GenerateMagics(uint64_t magics[64], uint8_t indexBits[64], uint64_t masks[64], bool rook);
-	static bool TryMakeTable(const Types::Magic& magic);
+	static uint64_t GenerateMagicNumber(const Types::Magic& magic);
 
 	static uint64_t GetRookSlidingMoves(int square, uint64_t blockers);
 	static uint64_t GetBishopSlidingMoves(int square, uint64_t blockers);

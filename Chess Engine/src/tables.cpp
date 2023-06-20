@@ -1,7 +1,110 @@
 #include "tables.h"
-#include <unordered_map>
+#include "gamestate.h"
 
-using namespace Types;
+std::unordered_map<uint64_t, uint64_t>** Tables::RookMoves;
+std::unordered_map<uint64_t, uint64_t>** Tables::BishopMoves;
+
+void Tables::Init()
+{
+	RookMoves = new std::unordered_map<uint64_t, uint64_t>*[64];
+	BishopMoves = new std::unordered_map<uint64_t, uint64_t>*[64];
+
+	for (int i = 0; i < 64; i++)
+	{
+		RookMoves[i] = new std::unordered_map<uint64_t, uint64_t>;
+		BishopMoves[i] = new std::unordered_map<uint64_t, uint64_t>;
+	}
+
+	InitRookMoves();
+	InitBishopMoves();
+}
+
+uint64_t Tables::GetRookMoves(const uint8_t square, const GameState& gameState) 
+{
+	const Types::Magic magic(square, true);
+	const uint64_t blockers = gameState.AllPieces() & magic.Mask;
+	const uint64_t moves = RookMoves[square]->at(MagicIndex(magic, blockers));
+	const uint64_t pieces = gameState.SideToMove == Types::Black ? gameState.WhitePieces() : gameState.BlackPieces();
+	return moves & ~pieces;
+}
+
+uint64_t Tables::GetBishopMoves(const uint8_t square, const GameState& gameState) 
+{
+	const Types::Magic magic(square, false);
+	const uint64_t blockers = gameState.AllPieces() & magic.Mask;
+	const uint64_t moves = BishopMoves[square]->at(MagicIndex(magic, blockers));
+	const uint64_t pieces = gameState.SideToMove == Types::Black ? gameState.WhitePieces() : gameState.BlackPieces();
+	return moves & ~pieces;
+}
+
+uint64_t Tables::GetBlackPawnMoves(const uint8_t square, const GameState& gameState)
+{
+	uint64_t move = BLACK_PAWN_SINGLE_PUSH[square] & ~gameState.AllPieces();
+	if (move)
+	{
+		move |= BLACK_PAWN_DOUBLE_PUSH[square] & ~gameState.AllPieces();
+	}
+	const uint64_t pieces = gameState.SideToMove == Types::Black ? gameState.WhitePieces() : gameState.BlackPieces();
+	move |= BLACK_PAWN_ATTACKS[square] & (pieces | gameState.EnPassantSquare);
+	return move;
+}
+
+uint64_t Tables::GetWhitePawnMoves(const uint8_t square, const GameState& gameState)
+{
+	uint64_t move = WHITE_PAWN_SINGLE_PUSH[square] & ~gameState.AllPieces();
+	if (move)
+	{
+		move |= WHITE_PAWN_DOUBLE_PUSH[square] & ~gameState.AllPieces();
+	}
+	const uint64_t pieces = gameState.SideToMove == Types::Black ? gameState.WhitePieces() : gameState.BlackPieces();
+	move |= WHITE_PAWN_ATTACKS[square] & (pieces | gameState.EnPassantSquare);
+	return move;
+}
+
+uint64_t Tables::GetQueenMoves(const uint8_t square, const GameState& gameState) 
+{
+		return GetRookMoves(square, gameState) | GetBishopMoves(square, gameState);
+}
+
+uint64_t Tables::GetKingMoves(const uint8_t square, const GameState& gameState)
+{
+	uint64_t moves = KING_ATTACKS[square];
+
+	if(square == 4)
+	{
+		if((gameState.AllPieces() & 0x0000000000000060) && (gameState.CastlingRights & Types::WhiteKingSide))
+		{
+			moves |= 0x0000000000000040;
+		}
+		if((gameState.AllPieces() & 0x000000000000000E) && (gameState.CastlingRights & Types::WhiteQueenSide))
+		{
+			moves |= 0x0000000000000004;
+		}
+	}	
+	else if(square == 60)
+	{
+		if((gameState.AllPieces() & 0x6000000000000000) && (gameState.CastlingRights & Types::BlackKingSide))
+		{
+			moves |= 0x4000000000000000;
+		}
+		if((gameState.AllPieces() & 0xE00000000000000) && (gameState.CastlingRights & Types::BlackKingSide))
+		{
+			moves |= 0x0400000000000000;
+		}
+		
+	}
+	const uint64_t pieces = gameState.SideToMove == Types::Black ? gameState.WhitePieces() : gameState.BlackPieces();
+	return moves & ~pieces;
+}
+
+uint64_t Tables::GetKnightMoves(const uint8_t square, const GameState& gameState)
+{
+	const uint64_t moves = KNIGHT_ATTACKS[square];
+	const uint64_t pieces = gameState.SideToMove == Types::Black ? gameState.WhitePieces() : gameState.BlackPieces();
+	return moves & ~pieces;
+}
+
+/* Tables */
 
 // Jumping Pieces
 constexpr uint64_t Tables::KING_ATTACKS[64] = {
@@ -187,115 +290,67 @@ constexpr uint64_t Tables::BISHOP_MAGIC_MASKS[64] = {
 	0x0028440200000000, 0x0050080402000000, 0x0020100804020000, 0x0040201008040200,
 };
 
+// Magics
 constexpr uint64_t Tables::ROOK_MAGICS[64] = {
-0x0200000009010000, 0x0000042004000000, 0x49041e200c200000, 0x0208300100008000,
-0x4060301000040000, 0x2004000410000000, 0x8081804082220800, 0x0404010c00002000,
-0x1102c10120600000, 0x89005a0100010000, 0x4004a24050004000, 0x00000c0100044000,
-0x000b00d400202000, 0x0000c10000000000, 0x0000002800008000, 0x2080000000408000,
-0x4008204300410000, 0xa00a004000000000, 0x0400410210900000, 0x0030600000e02000,
-0x0222230400000000, 0x02000a0014220000, 0x8811100000340000, 0x0400200400160600,
-0x4012000804000000, 0x0040101007090000, 0x0000000008080000, 0x0000000042220000,
-0x0821010029040000, 0x000400a000100000, 0x0004518000008400, 0x80c0080081400000,
-0x302000b00cc00000, 0x20280004c0100000, 0x0008430000200000, 0x0000000281010000,
-0x0080080100200000, 0x7004004111000000, 0x1040000400a00000, 0x0841020400100200,
-0x1101e00000000000, 0x8020000000000000, 0x8030000001020000, 0x0c00100080100000,
-0x0800209200080000, 0x0200000002100000, 0x002c400161002000, 0x8021000000140000,
-0x02200b0003018000, 0x0400400404802400, 0x0010008008018400, 0x000000e041208000,
-0x0300100200000000, 0x0060800421181800, 0x1100000000032000, 0x4628050092014000,
-0x0a00014002583800, 0x4030c1101209a020, 0x0020002208000400, 0x4080200200040400,
-0x04845404a0000808, 0x0020818000012890, 0x3044062019001510, 0x2010200000240200,
+0x0080001020400080, 0x0040001000200040, 0x0080081000200080, 0x0080040800100080,
+	0x0080020400080080, 0x0080010200040080, 0x0080008001000200, 0x0080002040800100,
+	0x0000800020400080, 0x0000400020005000, 0x0000801000200080, 0x0000800800100080,
+	0x0000800400080080, 0x0000800200040080, 0x0000800100020080, 0x0000800040800100,
+	0x0000208000400080, 0x0000404000201000, 0x0000808010002000, 0x0000808008001000,
+	0x0000808004000800, 0x0000808002000400, 0x0000010100020004, 0x0000020000408104,
+	0x0000208080004000, 0x0000200040005000, 0x0000100080200080, 0x0000080080100080,
+	0x0000040080080080, 0x0000020080040080, 0x0000010080800200, 0x0000800080004100,
+	0x0000204000800080, 0x0000200040401000, 0x0000100080802000, 0x0000080080801000,
+	0x0000040080800800, 0x0000020080800400, 0x0000020001010004, 0x0000800040800100,
+	0x0000204000808000, 0x0000200040008080, 0x0000100020008080, 0x0000080010008080,
+	0x0000040008008080, 0x0000020004008080, 0x0000010002008080, 0x0000004081020004,
+	0x0000204000800080, 0x0000200040008080, 0x0000100020008080, 0x0000080010008080,
+	0x0000040008008080, 0x0000020004008080, 0x0000800100020080, 0x0000800041000080,
+	0x00FFFCDDFCED714A, 0x007FFCDDFCED714A, 0x003FFFCDFFD88096, 0x0000040810002101,
+	0x0001000204080011, 0x0001000204000801, 0x0001000082000401, 0x0001FFFAABFAD1A2
 };
 constexpr uint64_t Tables::BISHOP_MAGICS[64] = {
-0x0021040000000000, 0x2180041800040000, 0x0100000c00000000, 0x5100000000210008,
-0x8010600000002000, 0x0100000280000000, 0x8120840002000000, 0x0400000004030000,
-0x4200200000a40000, 0x0000900000000000, 0x0000580a20000000, 0x2020020020000000,
-0x0084002000000000, 0x1324200884000000, 0x2000004200140000, 0x0040010000000000,
-0x0012510042040000, 0x0010400000482000, 0x1210100000043000, 0x2000006008000000,
-0x408c001000000000, 0x8008010840000000, 0x0000000200000000, 0x0800210420000000,
-0x0808211000402000, 0x1400000042084000, 0x0009820000008000, 0x0240900c00180000,
-0x1000050200860000, 0x00200400c0000000, 0x0000000000052000, 0x0004400180000000,
-0x0908100012110000, 0x0202100081824000, 0x141210a6c0202000, 0x0082010080202000,
-0x050000020881c000, 0x002a0000360cc000, 0x2202200100400000, 0x2a10000002250800,
-0x0400030008040000, 0x0000004000840000, 0x0904184408000000, 0x0358200890001000,
-0x10a0902000000000, 0x8502000000000000, 0x0480000008452000, 0x0012002000000000,
-0x1830140100800000, 0x10500208c0000000, 0x0001240010000000, 0x0028100044000000,
-0x080000908c300000, 0x8000040004100000, 0x0000002100400000, 0x1809801002000000,
-0x2080400000040000, 0x0049004080100000, 0x8200f09410200000, 0x8001800000020000,
-0x20001400000cc800, 0x0028044040000400, 0x0100440008200000, 0x081c108508002000,
-};
-constexpr uint8_t Tables::ROOK_INDEX_BITS[64] = {
-0x00000031, 0x00000032, 0x00000033, 0x00000034,
-0x00000035, 0x00000036, 0x00000037, 0x00000038,
-0x00000031, 0x00000032, 0x00000033, 0x00000034,
-0x00000035, 0x00000036, 0x00000037, 0x00000038,
-0x00000031, 0x00000032, 0x00000033, 0x00000034,
-0x00000035, 0x00000036, 0x00000037, 0x00000038,
-0x00000031, 0x00000032, 0x00000033, 0x00000034,
-0x00000035, 0x00000036, 0x00000037, 0x00000038,
-0x00000031, 0x00000032, 0x00000033, 0x00000034,
-0x00000035, 0x00000036, 0x00000037, 0x00000038,
-0x00000031, 0x00000032, 0x00000033, 0x00000034,
-0x00000035, 0x00000036, 0x00000037, 0x00000038,
-0x00000037, 0x00000037, 0x00000037, 0x00000037,
-0x00000037, 0x00000037, 0x00000036, 0x00000037,
-0x0000003f, 0x0000003f, 0x0000003f, 0x0000003f,
-0x0000003f, 0x0000003f, 0x0000003e, 0x0000003f,
-};
-constexpr uint8_t Tables::BISHOP_INDEX_BITS[64] = {
-0x00000037, 0x0000002f, 0x00000027, 0x0000001f,
-0x0000001a, 0x00000022, 0x0000002a, 0x00000032,
-0x00000036, 0x00000037, 0x0000002f, 0x00000027,
-0x00000022, 0x0000002a, 0x00000032, 0x00000033,
-0x00000035, 0x00000036, 0x00000037, 0x0000002f,
-0x0000002a, 0x00000032, 0x00000033, 0x00000034,
-0x00000034, 0x00000035, 0x00000036, 0x00000037,
-0x00000032, 0x00000033, 0x00000034, 0x00000035,
-0x00000033, 0x00000034, 0x00000035, 0x00000036,
-0x00000037, 0x00000034, 0x00000035, 0x00000036,
-0x00000032, 0x00000033, 0x00000034, 0x00000035,
-0x00000036, 0x00000037, 0x00000036, 0x00000037,
-0x0000002a, 0x0000002b, 0x0000002c, 0x0000002d,
-0x0000002e, 0x0000002f, 0x0000002e, 0x0000002f,
-0x00000032, 0x00000033, 0x00000034, 0x00000035,
-0x00000036, 0x00000037, 0x00000036, 0x00000037,
+0x0002020202020200, 0x0002020202020000, 0x0004010202000000, 0x0004040080000000,
+	0x0001104000000000, 0x0000821040000000, 0x0000410410400000, 0x0000104104104000,
+	0x0000040404040400, 0x0000020202020200, 0x0000040102020000, 0x0000040400800000,
+	0x0000011040000000, 0x0000008210400000, 0x0000004104104000, 0x0000002082082000,
+	0x0004000808080800, 0x0002000404040400, 0x0001000202020200, 0x0000800802004000,
+	0x0000800400A00000, 0x0000200100884000, 0x0000400082082000, 0x0000200041041000,
+	0x0002080010101000, 0x0001040008080800, 0x0000208004010400, 0x0000404004010200,
+	0x0000840000802000, 0x0000404002011000, 0x0000808001041000, 0x0000404000820800,
+	0x0001041000202000, 0x0000820800101000, 0x0000104400080800, 0x0000020080080080,
+	0x0000404040040100, 0x0000808100020100, 0x0001010100020800, 0x0000808080010400,
+	0x0000820820004000, 0x0000410410002000, 0x0000082088001000, 0x0000002011000800,
+	0x0000080100400400, 0x0001010101000200, 0x0002020202000400, 0x0001010101000200,
+	0x0000410410400000, 0x0000208208200000, 0x0000002084100000, 0x0000000020880000,
+	0x0000001002020000, 0x0000040408020000, 0x0004040404040000, 0x0002020202020000,
+	0x0000104104104000, 0x0000002082082000, 0x0000000020841000, 0x0000000000208800,
+	0x0000000010020200, 0x0000000404080200, 0x0000040404040400, 0x0002020202020200
 };
 
-Tables::Tables()
-{
-	RookMoves = new std::unordered_map<uint64_t, uint64_t>*[64];
-	BishopMoves = new std::unordered_map<uint64_t, uint64_t>*[64];
+/* Magic */
 
-	for (int i = 0; i < 64; i++)
-	{
-		RookMoves[i] = new std::unordered_map<uint64_t, uint64_t>;
-		BishopMoves[i] = new std::unordered_map<uint64_t, uint64_t>;
-	}
-
-	InitRookMoves();
-	InitBishopMoves();
-}
-
-void Tables::InitRookMoves() const
+void Tables::InitRookMoves()
 {
 	for (uint8_t i = 0; i < 64; i++)
 	{
-		const Magic magic(i, true);
+		const Types::Magic magic(i, true);
 		MakeTable(magic);
 	}
 }
 
-void Tables::InitBishopMoves() const
+void Tables::InitBishopMoves()
 {
 	for (uint8_t i = 0; i < 64; i++)
 	{
-		const Magic magic(i, false);
+		const Types::Magic magic(i, false);
 		MakeTable(magic);
 	}
 }
 
-uint64_t Tables::MagicIndex(const Magic& magic, const uint64_t blockers)
+uint64_t Tables::MagicIndex(const Types::Magic& magic, const uint64_t blockers)
 {
-	return ((blockers & magic.Mask) * magic.MagicNumber) >> (64 - magic.IndexBits);
+	return ((blockers & magic.Mask) * magic.MagicNumber) >> (magic.IndexBits);
 }
 
 uint64_t Tables::GetRookSlidingMoves(const int square, const uint64_t blockers)
@@ -382,7 +437,7 @@ uint16_t Tables::GetAllBlockers(uint64_t* allBlockers, const uint64_t andMask)
 	return i;
 }
 
-void Tables::MakeTable(const Magic& magic) const
+void Tables::MakeTable(const Types::Magic& magic)
 {
 	auto* allBlockers = new uint64_t[4096];
 	const uint16_t numBlockers = GetAllBlockers(allBlockers, magic.Mask);
@@ -414,100 +469,19 @@ void Tables::MakeTable(const Magic& magic) const
 	delete[] allBlockers;
 }
 
-uint64_t Tables::GetRookMoves(const uint8_t square, const uint64_t allPieces) const
-{
-	const Magic magic(square, true);
-	const uint64_t blockers = allPieces & magic.Mask;
-	return RookMoves[square]->at(MagicIndex(magic, blockers));
-}
-
-uint64_t Tables::GetBishopMoves(const uint8_t square, const uint64_t allPieces) const
-{
-	const Magic magic(square, false);
-	const uint64_t blockers = allPieces & magic.Mask;
-	return BishopMoves[square]->at(MagicIndex(magic, blockers));
-}
-
-uint64_t Tables::GetBlackPawnMoves(const uint8_t square, const uint64_t allPieces)
-{
-	uint64_t move = Tables::BLACK_PAWN_SINGLE_PUSH[square] & ~allPieces;
-	if (!move)
-	{
-		move |= Tables::BLACK_PAWN_DOUBLE_PUSH[square] & ~allPieces;
-	}
-	move |= Tables::BLACK_PAWN_ATTACKS[square] & allPieces;
-	return move;
-}
-
-uint64_t Tables::GetWhitePawnMoves(const uint8_t square, const uint64_t allPieces)
-{
-	uint64_t move = Tables::WHITE_PAWN_SINGLE_PUSH[square] & ~allPieces;
-	if (!move)
-	{
-		move |= Tables::WHITE_PAWN_DOUBLE_PUSH[square] & ~allPieces;
-	}
-	move |= Tables::WHITE_PAWN_ATTACKS[square] & allPieces;
-	return move;
-}
-
-bool Tables::RookMagicTesting()
-{
-	for(uint8_t square = 0; square < 64; square++)
-	{
-		uint64_t allBlockers[4096];
-		const uint64_t numBlockers = GetAllBlockers(allBlockers, ROOK_MAGIC_MASKS[square]);
-
-		auto tables = Tables();
-
-		for(uint64_t n = 0; n < numBlockers; n++)
-		{
-			if(GetRookSlidingMoves(square, allBlockers[n]) != tables.GetRookMoves(square, allBlockers[n]))
-			{
-				std::cout << "Rook magic testing failed for square " << static_cast<int>(square) << std::endl;
-				std::cout << "Blockers: " << std::endl;
-				Types::PrintBitboard(allBlockers[n]);
-				std::cout << "Result: " << std::endl;
-				Types::PrintBitboard(tables.GetRookMoves(square, allBlockers[n]));
-				std::cout << "Expected: " << std::endl;
-				Types::PrintBitboard(GetRookSlidingMoves(square, allBlockers[n]));
-				return false;
-			}
-		}
-	}
-	return true;
-}
-
-bool Tables::BishopMagicTesting()
-{
-	for(uint8_t square = 0; square < 64; square++)
-	{
-		uint64_t allBlockers[4096];
-		const uint64_t numBlockers = GetAllBlockers(allBlockers, BISHOP_MAGIC_MASKS[square]);
-
-		auto tables = Tables();
-
-		for(uint64_t n = 0; n < numBlockers; n++)
-		{
-			if(GetBishopSlidingMoves(square, allBlockers[n]) != tables.GetBishopMoves(square, allBlockers[n]))
-			{
-				std::cout << "Bishop magic testing failed for square " << static_cast<int>(square) << std::endl;
-				std::cout << "Blockers: " << std::endl;
-				Types::PrintBitboard(allBlockers[n]);
-				std::cout << "Result: " << std::endl;
-				Types::PrintBitboard(tables.GetBishopMoves(square, allBlockers[n]));
-				std::cout << "Expected: " << std::endl;
-				Types::PrintBitboard(GetBishopSlidingMoves(square, allBlockers[n]));
-				return false;
-			}
-		}
-	}
-	return true;
-}
-
-void Tables::GetMagicTables(uint8_t square, bool rook, uint64_t* mask, uint64_t* magicNumber, uint8_t* indexBits)
+void Tables::GetMagicTables(const uint8_t square, const bool rook, uint64_t* mask, uint64_t* magicNumber, uint8_t* indexBits)
 {
 	*mask = rook ? ROOK_MAGIC_MASKS[square] : BISHOP_MAGIC_MASKS[square];
 	*magicNumber = rook ? ROOK_MAGICS[square] : BISHOP_MAGICS[square];
-	*indexBits = rook ? ROOK_INDEX_BITS[square] : BISHOP_INDEX_BITS[square];
+	*indexBits = rook ? GetRookIndexBits(square) : GetBishopIndexBits(square);
 }
 
+uint8_t Tables::GetRookIndexBits(const uint8_t square)
+{
+		return 64 - Types::PopCount(ROOK_MAGIC_MASKS[square]);
+}
+
+uint8_t Tables::GetBishopIndexBits(const uint8_t square)
+{
+		return 64 - Types::PopCount(BISHOP_MAGIC_MASKS[square]);
+}

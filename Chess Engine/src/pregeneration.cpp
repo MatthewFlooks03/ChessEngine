@@ -3,6 +3,7 @@
 #include <iomanip>
 #include <random>
 #include <unordered_map>
+#include <bitset>
 
 using namespace Types;
 
@@ -22,14 +23,6 @@ void PreGeneration::Generate()
 
 	std::cout << "constexpr uint64_t Tables::BISHOP_MAGICS[64] = {" << std::endl;
 	PrintBitboardArray(bishopMagics);
-	std::cout << "};" << std::endl;
-
-	std::cout << "constexpr uint8_t Tables::ROOK_INDEX_BITS[64] = {" << std::endl;
-	PrintIndexArray(rookIndexBits);
-	std::cout << "};" << std::endl;
-
-	std::cout << "constexpr uint8_t Tables::BISHOP_INDEX_BITS[64] = {" << std::endl;
-	PrintIndexArray(bishopIndexBits);
 	std::cout << "};" << std::endl;
 }
 
@@ -204,67 +197,6 @@ void PreGeneration::GenerateBishopMagics(uint64_t magics[64], uint8_t indexBits[
 
 void PreGeneration::GenerateMagics(uint64_t magics[64], uint8_t indexBits[64], uint64_t masks[64], bool rook)
 {
-	for (uint8_t square = 0; square < 64; square++) {
-		Magic magic;
-
-		magic.Mask = masks[square];
-		magic.Rook = rook;
-		magic.Square = square;
-
-		uint8_t bits;
-		uint64_t var = magic.Mask;
-		for (bits = 0; var != 0; ++bits) var >>= 1;
-
-		magic.IndexBits = bits;
-		indexBits[square] = bits;
-
-		do {
-			std::random_device rd;
-			std::mt19937_64 eng(rd());
-			std::uniform_int_distribution<uint64_t> distribution;
-			magic.MagicNumber = distribution(eng) & distribution(eng) & distribution(eng);
-		} while (TryMakeTable(magic));
-
-		magics[square] = magic.MagicNumber;
-	}
-}
-
-bool PreGeneration::TryMakeTable(const Types::Magic& magic)
-{
-	std::unordered_map<uint64_t, uint64_t> moveTable;
-
-	auto* allBlockers = new uint64_t[4096];
-	const int numBlockers = Tables::GetAllBlockers(allBlockers, magic.Mask);
-
-	for (int n = 0; n <= numBlockers; n++) {
-		const uint64_t blockers = allBlockers[n];
-		uint64_t index = Tables::MagicIndex(magic, blockers);
-
-		uint64_t slidingMoves;
-		if (magic.Rook) {
-			slidingMoves = GetRookSlidingMoves(magic.Square, blockers);
-		}
-		else {
-			slidingMoves = GetBishopSlidingMoves(magic.Square, blockers);
-		}
-
-		if (moveTable.count(index) == 0)
-		{
-			moveTable.insert(std::make_pair(index, slidingMoves));
-		}
-		else if (moveTable.at(index) != slidingMoves)
-		{
-			delete[] allBlockers;
-			return false;
-		}
-		if (moveTable.at(index) != slidingMoves)
-		{
-			delete[] allBlockers;
-			return false;
-		}
-	}
-	delete[] allBlockers;
-	return true;
 }
 
 uint64_t PreGeneration::GetRookSlidingMoves(int square, uint64_t blockers)
@@ -273,22 +205,26 @@ uint64_t PreGeneration::GetRookSlidingMoves(int square, uint64_t blockers)
 	const int rank = square / 8;
 	const int file = square % 8;
 	// North
-	for (int i = rank + 1; i < 8; i++) {
+	for (int i = rank + 1; i < 8; i++)
+	{
 		moves |= (1ULL << (i * 8 + file));
 		if (blockers & (1ULL << (i * 8 + file))) break;
 	}
 	// South
-	for (int i = rank - 1; i >= 0; i--) {
+	for (int i = rank - 1; i >= 0; i--)
+	{
 		moves |= (1ULL << (i * 8 + file));
 		if (blockers & (1ULL << (i * 8 + file))) break;
 	}
 	// East
-	for (int i = file + 1; i < 8; i++) {
+	for (int i = file + 1; i < 8; i++)
+	{
 		moves |= (1ULL << (rank * 8 + i));
 		if (blockers & (1ULL << (rank * 8 + i))) break;
 	}
 	// West
-	for (int i = file - 1; i >= 0; i--) {
+	for (int i = file - 1; i >= 0; i--)
+	{
 		moves |= (1ULL << (rank * 8 + i));
 		if (blockers & (1ULL << (rank * 8 + i))) break;
 	}
@@ -301,29 +237,32 @@ uint64_t PreGeneration::GetBishopSlidingMoves(int square, uint64_t blockers)
 	const int rank = square / 8;
 	const int file = square % 8;
 	// North East
-	for (int i = 1; i < 8; i++) {
+	for (int i = 1; i < 8; i++)
+	{
 		if (rank + i > 7 || file + i > 7) break;
 		moves |= (1ULL << ((rank + i) * 8 + file + i));
 		if (blockers & (1ULL << ((rank + i) * 8 + file + i))) break;
 	}
 	// North West
-	for (int i = 1; i < 8; i++) {
+	for (int i = 1; i < 8; i++)
+	{
 		if (rank + i > 7 || file - i < 0) break;
 		moves |= (1ULL << ((rank + i) * 8 + file - i));
 		if (blockers & (1ULL << ((rank + i) * 8 + file - i))) break;
 	}
 	// South East
-	for (int i = 1; i < 8; i++) {
+	for (int i = 1; i < 8; i++)
+	{
 		if (rank - i < 0 || file + i > 7) break;
 		moves |= (1ULL << ((rank - i) * 8 + file + i));
 		if (blockers & (1ULL << ((rank - i) * 8 + file + i))) break;
 	}
 	// South West
-	for (int i = 1; i < 8; i++) {
+	for (int i = 1; i < 8; i++)
+	{
 		if (rank - i < 0 || file - i < 0) break;
 		moves |= (1ULL << ((rank - i) * 8 + file - i));
 		if (blockers & (1ULL << ((rank - i) * 8 + file - i))) break;
 	}
 	return moves;
-
 }

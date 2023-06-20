@@ -1,31 +1,25 @@
 #pragma once
 #include <unordered_map>
+#include "gamestate.h"
 #include "types.h"
-using namespace Types;
 
 class Tables {
 public:
-	static constexpr uint64_t GetKingMoves(const uint8_t square) {return KING_ATTACKS[square];}
-	static constexpr uint64_t GetKnightMoves(const uint8_t square) {return KNIGHT_ATTACKS[square];}
-	static uint64_t GetBlackPawnMoves(const uint8_t square, const uint64_t allPieces);
-	static uint64_t GetWhitePawnMoves(const uint8_t square, const uint64_t allPieces);
-	uint64_t GetRookMoves(const uint8_t square, const uint64_t allPieces) const;
-	uint64_t GetBishopMoves(const uint8_t square, const uint64_t allPieces) const;
-
-	static bool RookMagicTesting();
-	static bool BishopMagicTesting();
-
-	Tables();
+	static uint64_t GetKingMoves(uint8_t square, const GameState& gameState);
+	static uint64_t GetKnightMoves(uint8_t square, const GameState& gameState);
+	static uint64_t GetBlackPawnMoves(uint8_t square, const GameState& gameState);
+	static uint64_t GetWhitePawnMoves(uint8_t square, const GameState& gameState);
+	static uint64_t GetRookMoves(uint8_t square, const GameState& gameState);
+	static uint64_t GetBishopMoves(uint8_t square, const GameState& gameState);
+	static uint64_t GetQueenMoves(uint8_t square, const GameState& gameState);
 
 	static void GetMagicTables(const uint8_t square, const bool rook, uint64_t* mask, uint64_t* magicNumber, uint8_t* indexBits);
-	static uint64_t MagicIndex(const Magic& magic, const uint64_t blockers);
-	static uint64_t GetRookSlidingMoves(const int square, const uint64_t blockers);
-	static uint64_t GetBishopSlidingMoves(const int square, const uint64_t blockers);
-	static uint16_t GetAllBlockers(uint64_t allBlockers[4096], const uint64_t andMask);
+
+	static void Init();
 
 private:
-	void InitRookMoves() const;
-	void InitBishopMoves() const;
+	static void InitRookMoves();
+	static void InitBishopMoves();
 
 	static const uint64_t KING_ATTACKS[64];
 	static const uint64_t KNIGHT_ATTACKS[64];
@@ -45,12 +39,17 @@ private:
 	static const uint64_t BISHOP_MAGICS[64];
 
 	// Index Bits
-	static const uint8_t ROOK_INDEX_BITS[64];
-	static const uint8_t BISHOP_INDEX_BITS[64];
+	static uint8_t GetRookIndexBits(uint8_t square);
+	static uint8_t GetBishopIndexBits(uint8_t square);
 
 	// Moves Storage
-	std::unordered_map<uint64_t, uint64_t>** RookMoves;
-	std::unordered_map<uint64_t, uint64_t>** BishopMoves;
+	static std::unordered_map<uint64_t, uint64_t>** RookMoves;
+	static std::unordered_map<uint64_t, uint64_t>** BishopMoves;
 
-	void MakeTable(const Magic& magic) const;
+	static void MakeTable(const Types::Magic& magic);
+
+	static uint64_t MagicIndex(const Types::Magic& magic, const uint64_t blockers);
+	static uint64_t GetRookSlidingMoves(const int square, const uint64_t blockers);
+	static uint64_t GetBishopSlidingMoves(const int square, const uint64_t blockers);
+	static uint16_t GetAllBlockers(uint64_t allBlockers[4096], const uint64_t andMask);
 };

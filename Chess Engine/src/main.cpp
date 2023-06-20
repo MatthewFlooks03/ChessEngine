@@ -1,12 +1,10 @@
-﻿#include "tables.h"
-#include "pregeneration.h"
+﻿#include "gamestate.h"
+#include "tables.h"
+#include "types.h"
 
 int main()
 {
-	PreGeneration::Generate();
-
-	Tables::RookMagicTesting();
-	Tables::BishopMagicTesting();
-	
+	constexpr uint64_t bitboard = 0xFFFF00FFFFFFFFFFULL;
+	std::list<uint8_t> list = Types::SerialiseBitboard(bitboard);
 	return 0;
 }

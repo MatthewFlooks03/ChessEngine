@@ -1,16 +1,17 @@
 #pragma once
 #include <iostream>
+#include <vector>
 #include <list>
 
 namespace Types {
 	/* Enums */
-	enum Color
+	enum Color: uint8_t
 	{
 		White = 0,
 		Black = 1
 	};
 
-	enum Square
+	enum Square: uint8_t
 	{
 		A1, B1, C1, D1, E1, F1, G1, H1,
 		A2, B2, C2, D2, E2, F2, G2, H2,
@@ -22,7 +23,7 @@ namespace Types {
 		A8, B8, C8, D8, E8, F8, G8, H8
 	};
 
-	enum Piece
+	enum Piece: uint8_t
 	{
 		King,		//0
 		Queen,		//1
@@ -34,7 +35,7 @@ namespace Types {
 		None		//7
 	};
 
-	enum CastlingRights
+	enum CastlingRights: uint8_t
 	{
 		WhiteKingSide = 8,
 		WhiteQueenSide = 4,
@@ -44,13 +45,14 @@ namespace Types {
 
 	/* Move within uint32_t
 		MSB
-	 * unused (9) 
-	 * piece color (1)
-	 * piece to move (3) (NM-0, K-1, Q-2, R-3, B-4, K-5, P-6)
-	 * piece to capture (3) (NC-0, K-1, Q-2, R-3, B-4, K-5, P-6, E-7)
-	 * castling (4) (NC-0, WK WQ BK BQ)
-	 * initial pos (6) (0-63)
-	 * final pos (6) (0-63)
+	 * Color (1)
+	 * Piece Moved (3)
+	 * Piece Captured (3)
+	 * Initial Position (6)
+	 * Final Position (6)
+	 * En Passant (6)
+	 * Promotion (3)
+	 * Castling (4)
 		LSB
 	 */
 
@@ -70,9 +72,10 @@ namespace Types {
 	constexpr uint64_t SouthEast(const uint64_t bitboard) { return South(East(bitboard)); } // Shift the bitboard South West
 	constexpr uint64_t SouthWest(const uint64_t bitboard) { return South(West(bitboard)); } // Shift the bitboard South West
 
-	constexpr uint64_t IntToBitboard(const int square) { return 1ULL << square; } // Convert an integer to a bitboard}
+	constexpr uint64_t IntToBitboard(const int square) {  return 1ULL << square;} // Convert an integer to a bitboard}
 	constexpr uint64_t GetFile(const int square) { return (square % 8); } // Get the file of a square
 	constexpr uint64_t GetRank(const int square) { return (square / 8); } // Get the rank of a square
+
 
 	extern uint64_t SetBit(uint64_t bitboard, uint8_t square);
 	extern uint64_t ClearBit(uint64_t bitboard, uint8_t square);
@@ -82,8 +85,9 @@ namespace Types {
 
 	extern uint8_t PopCount(uint64_t);
 	extern void PrintBitboard(uint64_t bitboard);
+	extern void PrintMove(uint32_t move);
 
-	extern std::list<uint8_t> SerialiseBitboard(uint64_t bitboard);
+	extern std::vector<uint8_t> SerialiseBitboard(uint64_t bitboard);
 	extern uint8_t BitScanForward(uint64_t bitboard);
 
 	/* Magic Class */

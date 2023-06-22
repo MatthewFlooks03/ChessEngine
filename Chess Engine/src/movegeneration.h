@@ -1,16 +1,16 @@
 #pragma once
 #include "types.h"
 #include "gamestate.h"
-#include <list>
+#include <vector>
 
 class MoveGeneration
 {
 public:
-	static std::list<uint32_t> GetAllPseudoMoves(const GameState& gameState);
+	static std::vector<uint32_t> GetAllPseudoMoves(const GameState& gameState);
 	static uint64_t GetAllAttacks(const GameState& gameState, uint8_t color);
 
 private:
-	static void GetPseudoMoves(const GameState& gameState, uint8_t piece, std::list<uint32_t>* moves);
+	static void GetPseudoMoves(const GameState& gameState, uint8_t piece, std::vector<uint32_t>* moves);
 
 	static uint64_t GetKingAttacks(uint64_t bitboard);
 	static uint64_t GetQueenAttacks(uint64_t bitboard);

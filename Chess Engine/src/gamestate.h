@@ -18,21 +18,30 @@ public:
 	uint64_t BlackPawn;
 
 	uint64_t EnPassantSquare;
-
+	uint64_t PreviousEnPassantSquare;
 	uint8_t CastlingRights; // NA NA NA NA WK WQ BK BQ 
-
 	uint8_t SideToMove; // 0 - white, 1 - black
+
+	std::list<uint32_t>* MoveHistory;
 
 	constexpr uint64_t WhitePieces() const { return WhiteKing | WhiteQueen | WhiteRook | WhiteBishop | WhiteKnight | WhitePawn; } 
 	constexpr uint64_t BlackPieces() const { return BlackKing | BlackQueen | BlackRook | BlackBishop | BlackKnight | BlackPawn; }
 	constexpr uint64_t AllPieces() const { return WhitePieces() | BlackPieces(); }
 
-	GameState();
+	bool ExecuteMove(uint32_t move);
+	void ReverseMove(uint32_t move);
 
+	void NextTurn();
+	void PreviousTurn();
+
+	GameState();
+	explicit GameState(const std::string& fen);
+	explicit GameState(const GameState* gameState);
+	
 	uint64_t operator[](uint8_t bitboard) const;
 	uint64_t& operator[](uint8_t bitboard);
 	
 	uint8_t GetPiece(uint8_t square, uint8_t color) const;
-	bool ExecuteMove(uint32_t move);
-	void ReverseMove(uint32_t move);
+
+	static uint8_t FenIntDecode(uint8_t i);
 };

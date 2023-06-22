@@ -24,19 +24,17 @@ uint64_t Tables::GetRookMoves(const uint8_t square, const GameState& gameState)
 	const Types::Magic magic(square, true);
 	const uint64_t blockers = gameState.AllPieces() & magic.Mask;
 	const uint64_t moves = RookMoves[square]->at(MagicIndex(magic, blockers));
-	const uint64_t pieces = gameState.SideToMove == Types::Black ? gameState.WhitePieces() : gameState.BlackPieces();
+	const uint64_t pieces = gameState.SideToMove == Types::White ? gameState.WhitePieces() : gameState.BlackPieces();
 	return moves & ~pieces;
 }
-
 uint64_t Tables::GetBishopMoves(const uint8_t square, const GameState& gameState) 
 {
 	const Types::Magic magic(square, false);
 	const uint64_t blockers = gameState.AllPieces() & magic.Mask;
 	const uint64_t moves = BishopMoves[square]->at(MagicIndex(magic, blockers));
-	const uint64_t pieces = gameState.SideToMove == Types::Black ? gameState.WhitePieces() : gameState.BlackPieces();
+	const uint64_t pieces = gameState.SideToMove == Types::White ? gameState.WhitePieces() : gameState.BlackPieces();
 	return moves & ~pieces;
 }
-
 uint64_t Tables::GetBlackPawnMoves(const uint8_t square, const GameState& gameState)
 {
 	uint64_t move = BLACK_PAWN_SINGLE_PUSH[square] & ~gameState.AllPieces();
@@ -48,7 +46,6 @@ uint64_t Tables::GetBlackPawnMoves(const uint8_t square, const GameState& gameSt
 	move |= BLACK_PAWN_ATTACKS[square] & (pieces | gameState.EnPassantSquare);
 	return move;
 }
-
 uint64_t Tables::GetWhitePawnMoves(const uint8_t square, const GameState& gameState)
 {
 	uint64_t move = WHITE_PAWN_SINGLE_PUSH[square] & ~gameState.AllPieces();
@@ -60,47 +57,44 @@ uint64_t Tables::GetWhitePawnMoves(const uint8_t square, const GameState& gameSt
 	move |= WHITE_PAWN_ATTACKS[square] & (pieces | gameState.EnPassantSquare);
 	return move;
 }
-
 uint64_t Tables::GetQueenMoves(const uint8_t square, const GameState& gameState) 
 {
 		return GetRookMoves(square, gameState) | GetBishopMoves(square, gameState);
 }
-
 uint64_t Tables::GetKingMoves(const uint8_t square, const GameState& gameState)
 {
 	uint64_t moves = KING_ATTACKS[square];
 
 	if(square == 4)
 	{
-		if((gameState.AllPieces() & 0x0000000000000060) && (gameState.CastlingRights & Types::WhiteKingSide))
+		if(!(gameState.AllPieces() & 0x0000000000000060) && (gameState.CastlingRights & Types::WhiteKingSide))
 		{
 			moves |= 0x0000000000000040;
 		}
-		if((gameState.AllPieces() & 0x000000000000000E) && (gameState.CastlingRights & Types::WhiteQueenSide))
+		if(!(gameState.AllPieces() & 0x000000000000000E) && (gameState.CastlingRights & Types::WhiteQueenSide))
 		{
 			moves |= 0x0000000000000004;
 		}
 	}	
 	else if(square == 60)
 	{
-		if((gameState.AllPieces() & 0x6000000000000000) && (gameState.CastlingRights & Types::BlackKingSide))
+		if(!(gameState.AllPieces() & 0x6000000000000000) && (gameState.CastlingRights & Types::BlackKingSide))
 		{
 			moves |= 0x4000000000000000;
 		}
-		if((gameState.AllPieces() & 0xE00000000000000) && (gameState.CastlingRights & Types::BlackKingSide))
+		if(!(gameState.AllPieces() & 0xE00000000000000) && (gameState.CastlingRights & Types::BlackKingSide))
 		{
 			moves |= 0x0400000000000000;
 		}
 		
 	}
-	const uint64_t pieces = gameState.SideToMove == Types::Black ? gameState.WhitePieces() : gameState.BlackPieces();
+	const uint64_t pieces = gameState.SideToMove == Types::White ? gameState.WhitePieces() : gameState.BlackPieces();
 	return moves & ~pieces;
 }
-
 uint64_t Tables::GetKnightMoves(const uint8_t square, const GameState& gameState)
 {
 	const uint64_t moves = KNIGHT_ATTACKS[square];
-	const uint64_t pieces = gameState.SideToMove == Types::Black ? gameState.WhitePieces() : gameState.BlackPieces();
+	const uint64_t pieces = gameState.SideToMove == Types::White ? gameState.WhitePieces() : gameState.BlackPieces();
 	return moves & ~pieces;
 }
 
@@ -338,7 +332,6 @@ void Tables::InitRookMoves()
 		MakeTable(magic);
 	}
 }
-
 void Tables::InitBishopMoves()
 {
 	for (uint8_t i = 0; i < 64; i++)
@@ -346,11 +339,6 @@ void Tables::InitBishopMoves()
 		const Types::Magic magic(i, false);
 		MakeTable(magic);
 	}
-}
-
-uint64_t Tables::MagicIndex(const Types::Magic& magic, const uint64_t blockers)
-{
-	return ((blockers & magic.Mask) * magic.MagicNumber) >> (magic.IndexBits);
 }
 
 uint64_t Tables::GetRookSlidingMoves(const int square, const uint64_t blockers)
@@ -384,7 +372,6 @@ uint64_t Tables::GetRookSlidingMoves(const int square, const uint64_t blockers)
 	}
 	return moves;
 }
-
 uint64_t Tables::GetBishopSlidingMoves(const int square, const uint64_t blockers)
 {
 	uint64_t moves = 0;
@@ -421,6 +408,10 @@ uint64_t Tables::GetBishopSlidingMoves(const int square, const uint64_t blockers
 	return moves;
 }
 
+uint64_t Tables::MagicIndex(const Types::Magic& magic, const uint64_t blockers)
+{
+	return ((blockers & magic.Mask) * magic.MagicNumber) >> (magic.IndexBits);
+}
 uint16_t Tables::GetAllBlockers(uint64_t* allBlockers, const uint64_t andMask)
 {
 	uint64_t currentBlockers = 0;
@@ -436,7 +427,6 @@ uint16_t Tables::GetAllBlockers(uint64_t* allBlockers, const uint64_t andMask)
 	} while (true);
 	return i;
 }
-
 void Tables::MakeTable(const Types::Magic& magic)
 {
 	auto* allBlockers = new uint64_t[4096];
@@ -468,7 +458,6 @@ void Tables::MakeTable(const Types::Magic& magic)
 
 	delete[] allBlockers;
 }
-
 void Tables::GetMagicTables(const uint8_t square, const bool rook, uint64_t* mask, uint64_t* magicNumber, uint8_t* indexBits)
 {
 	*mask = rook ? ROOK_MAGIC_MASKS[square] : BISHOP_MAGIC_MASKS[square];
@@ -480,7 +469,6 @@ uint8_t Tables::GetRookIndexBits(const uint8_t square)
 {
 		return 64 - Types::PopCount(ROOK_MAGIC_MASKS[square]);
 }
-
 uint8_t Tables::GetBishopIndexBits(const uint8_t square)
 {
 		return 64 - Types::PopCount(BISHOP_MAGIC_MASKS[square]);

@@ -246,7 +246,7 @@ uint8_t GameState::GetPiece(const uint8_t square, const uint8_t color) const
 
 	for (uint8_t i = j; i < j + 6; i++)
 	{
-		if (operator[](i) == squareBitboard)
+		if (operator[](i) & squareBitboard)
 		{
 			return i - j;
 		}
@@ -260,6 +260,9 @@ uint8_t GameState::GetPiece(const uint8_t square, const uint8_t color) const
 
 bool GameState::ExecuteMove(const uint32_t move)
 {
+	/* Add Move to History */
+	this->MoveHistory->push_back(move);
+
 	const uint8_t color = (move >> 31) & 0b1;
 	const uint8_t pieceMoved = (move >> 28) & 0b111;
 	const uint8_t pieceCaptured = (move >> 25) & 0b111;
@@ -270,6 +273,7 @@ bool GameState::ExecuteMove(const uint32_t move)
 	const uint8_t castling = move & 0b1111;
 
 	const uint8_t offset = color == Types::Color::White ? 0 : 6;
+	const uint8_t oppositeOffset = color == Types::Color::White ? 6 : 0;
 
 	uint64_t bitboard = this->operator[](pieceMoved + offset);
 
@@ -279,18 +283,18 @@ bool GameState::ExecuteMove(const uint32_t move)
 	this->operator[](pieceMoved + offset) = bitboard;
 
 	/* Capture Checks */
-	if(pieceCaptured == Types::EnPassant) 
+	if(pieceCaptured == Types::EnPassant && pieceMoved == Types::Pawn) 
 	{
-		uint64_t captureBitboard = this->operator[](Types::Pawn + offset);
+		uint64_t captureBitboard = this->operator[](Types::Pawn + oppositeOffset);
 		const uint8_t pawnSquare = color == Types::White ? finalPosition - 8 : finalPosition + 8;
 		captureBitboard = Types::ClearBit(captureBitboard, pawnSquare);
-		this->operator[](Types::Pawn + offset) = captureBitboard;
+		this->operator[](Types::Pawn + oppositeOffset) = captureBitboard;
 	}
-	else if(pieceCaptured != Types::None)
+	else if(pieceCaptured != Types::None && pieceCaptured != Types::EnPassant)
 	{
-		uint64_t captureBitboard = this->operator[](pieceCaptured + offset);
+		uint64_t captureBitboard = this->operator[](pieceCaptured + oppositeOffset);
 		captureBitboard = Types::ClearBit(captureBitboard, finalPosition);
-		this->operator[](pieceCaptured + offset) = captureBitboard;
+		this->operator[](pieceCaptured + oppositeOffset) = captureBitboard;
 	}
 
 	/* Promotion Checks */
@@ -308,28 +312,28 @@ bool GameState::ExecuteMove(const uint32_t move)
 	{
 		uint8_t rookInitialPos;
 		uint8_t rookFinalPos;
-		bool legal = false;
+		bool legal;
 		switch(castling)
 		{
 			case Types::CastlingRights::WhiteKingSide:
 				legal = !(MoveGeneration::GetAllAttacks(*this, oppositeColor) & 0x0000000000000060);
-				rookInitialPos = 63;
-				rookFinalPos = 61;
-				break;
-			case Types::CastlingRights::WhiteQueenSide:
-				legal = !(MoveGeneration::GetAllAttacks(*this, oppositeColor) & 0x000000000000000E);
-				rookInitialPos = 56;
-				rookFinalPos = 59;
-				break;
-			case Types::CastlingRights::BlackKingSide:
-				legal = !(MoveGeneration::GetAllAttacks(*this, oppositeColor) & 0x6000000000000000);
 				rookInitialPos = 7;
 				rookFinalPos = 5;
 				break;
-			case Types::CastlingRights::BlackQueenSide:
-				legal = !(MoveGeneration::GetAllAttacks(*this, oppositeColor) & 0xE00000000000000);
+			case Types::CastlingRights::WhiteQueenSide:
+				legal = !(MoveGeneration::GetAllAttacks(*this, oppositeColor) & 0x000000000000000E);
 				rookInitialPos = 0;
 				rookFinalPos = 3;
+				break;
+		case Types::CastlingRights::BlackKingSide:
+				legal = !(MoveGeneration::GetAllAttacks(*this, oppositeColor) & 0x6000000000000000);
+				rookInitialPos = 63;
+				rookFinalPos = 61;
+				break;
+			case Types::CastlingRights::BlackQueenSide:
+				legal = !(MoveGeneration::GetAllAttacks(*this, oppositeColor) & 0xE00000000000000);
+				rookInitialPos = 56;
+				rookFinalPos = 59;
 				break;
 			default:
 				throw std::invalid_argument("Invalid castling rights");
@@ -341,7 +345,13 @@ bool GameState::ExecuteMove(const uint32_t move)
 			rookBitboard = Types::SetBit(rookBitboard, rookFinalPos);
 			this->operator[](Types::Piece::Rook + offset) = rookBitboard;
 				
-			this->CastlingRights ^= castling; // Update Castling Rights
+			this->CastlingRights &= ~castling; // Update Castling Rights
+		}
+		else
+		{
+			ReverseMove(move);
+		std::cout << "FAILED: Castling" << std::endl;
+			return false;
 		}
 	}
 
@@ -353,20 +363,24 @@ bool GameState::ExecuteMove(const uint32_t move)
 	}
 	else
 	{
+		//Remove Enpassant Square
 		this->EnPassantSquare = 0;
 	}
 
-	/* Add Move to History */
-	this->MoveHistory->push_back(move);
-
+	
 	/* Update Turn */
 	this->NextTurn();
 
 	/* Check for Check */
 	const uint64_t kingBitboard = color == Types::White ? this->WhiteKing : this->BlackKing;
+	uint64_t attacks = MoveGeneration::GetQueenAttacks(this->WhiteQueen, *this);
+	Types::PrintMove(move);
+	Types::PrintBitboard(attacks);
+	Types::PrintBitboard(kingBitboard & attacks);
 	if(kingBitboard & MoveGeneration::GetAllAttacks(*this, oppositeColor))
 	{
 		ReverseMove(move);
+		std::cout << "FAILED" << std::endl;
 		return false;
 	}
 
@@ -385,6 +399,7 @@ void GameState::ReverseMove(const uint32_t move)
 	const uint8_t castling = move & 0b1111;
 
 	const uint8_t offset = color == Types::Color::White ? 0 : 6;
+	const uint8_t oppositeOffset = color == Types::Color::White ? 6 : 0;
 
 	uint64_t bitboard = this->operator[](pieceMoved + offset);
 
@@ -394,18 +409,18 @@ void GameState::ReverseMove(const uint32_t move)
 	this->operator[](pieceMoved + offset) = bitboard;
 
 	/* Capture Checks */
-	if(pieceCaptured == Types::EnPassant) 
+	if(pieceCaptured == Types::EnPassant && pieceMoved == Types::Pawn) 
 	{
-		uint64_t captureBitboard = this->operator[](Types::Pawn + offset);
+		uint64_t captureBitboard = this->operator[](Types::Pawn + oppositeOffset);
 		const uint8_t pawnSquare = color == Types::White ? finalPosition - 8 : finalPosition + 8;
 		captureBitboard = Types::SetBit(captureBitboard, pawnSquare);
-		this->operator[](Types::Pawn + offset) = captureBitboard;
+		this->operator[](Types::Pawn + oppositeOffset) = captureBitboard;
 	}
-	else if(pieceCaptured != Types::None)
+	else if(pieceCaptured != Types::None && pieceCaptured != Types::EnPassant)
 	{
-		uint64_t captureBitboard = this->operator[](pieceCaptured + offset);
+		uint64_t captureBitboard = this->operator[](pieceCaptured + oppositeOffset);
 		captureBitboard = Types::SetBit(captureBitboard, finalPosition);
-		this->operator[](pieceCaptured + offset) = captureBitboard;
+		this->operator[](pieceCaptured + oppositeOffset) = captureBitboard;
 	}
 
 	/* Promotion Checks */
@@ -418,7 +433,6 @@ void GameState::ReverseMove(const uint32_t move)
 	}
 
 	/* Castling Checks */
-	const uint8_t oppositeColor = color == Types::White ? Types::Black : Types::White;
 	if(castling != 0)
 	{
 		uint8_t rookInitialPos;
@@ -426,20 +440,20 @@ void GameState::ReverseMove(const uint32_t move)
 		switch(castling)
 		{
 			case Types::CastlingRights::WhiteKingSide:
-				rookInitialPos = 63;
-				rookFinalPos = 61;
-				break;
-			case Types::CastlingRights::WhiteQueenSide:
-				rookInitialPos = 56;
-				rookFinalPos = 59;
-				break;
-			case Types::CastlingRights::BlackKingSide:
 				rookInitialPos = 7;
 				rookFinalPos = 5;
 				break;
-			case Types::CastlingRights::BlackQueenSide:
+			case Types::CastlingRights::WhiteQueenSide:
 				rookInitialPos = 0;
 				rookFinalPos = 3;
+				break;
+			case Types::CastlingRights::BlackKingSide:
+				rookInitialPos = 63;
+				rookFinalPos = 61;
+				break;
+			case Types::CastlingRights::BlackQueenSide:
+				rookInitialPos = 56;
+				rookFinalPos = 59;
 				break;
 			default:
 				throw std::invalid_argument("Invalid castling rights");
@@ -450,7 +464,7 @@ void GameState::ReverseMove(const uint32_t move)
 		rookBitboard = Types::ClearBit(rookBitboard, rookFinalPos);
 		this->operator[](Types::Piece::Rook + offset) = rookBitboard;
 				
-		this->CastlingRights ^= castling; // Update Castling Rights
+		this->CastlingRights |= castling; // Update Castling Rights
 	}
 
 	/* Add En Passant Square */

@@ -11,7 +11,7 @@ std::vector<uint32_t> MoveGeneration::GetAllPseudoMoves(const GameState& gameSta
 void MoveGeneration::GetPseudoMoves(const GameState& gameState, const uint8_t pieceMoved,std::vector<uint32_t>* moves)
 {
 	uint64_t bitboard;
-	uint64_t (*getFunction) (const uint8_t, const GameState&) = nullptr;
+	uint64_t (*getFunction) (const uint8_t, const GameState&);
 
 	switch (pieceMoved)
 	{
@@ -77,11 +77,11 @@ void MoveGeneration::GetPseudoMoves(const GameState& gameState, const uint8_t pi
 			uint8_t castling = 0; // CASTLING
 			if (pieceMoved == Types::King)
 			{
-				if (static_cast<int>(initialPosition - pieceMoved) == 2)
+				if (static_cast<int>(initialPosition - finalPosition) == -2)
 				{
 					castling = gameState.SideToMove == Types::Color::White ? Types::WhiteKingSide : Types::BlackKingSide;
 				}
-				else if (static_cast<int>(initialPosition - finalPosition) == -2)
+				else if (static_cast<int>(initialPosition - finalPosition) == 2)
 				{
 					castling = gameState.SideToMove == Types::Color::White ? Types::WhiteQueenSide : Types::BlackQueenSide;
 				}
@@ -101,7 +101,7 @@ void MoveGeneration::GetPseudoMoves(const GameState& gameState, const uint8_t pi
 				(
 				color == Types::White && finalPosition <=63 && finalPosition >= 56
 				||
-				color == Types::Black && finalPosition <= 7 && finalPosition >= 0
+				color == Types::Black && finalPosition <= 7
 				))
 			{
 				for(uint8_t i = Types::Queen; i <= Types::Knight; i++)
@@ -144,9 +144,9 @@ uint64_t MoveGeneration::GetAllAttacks(const GameState& gameState, const uint8_t
 	uint64_t bitboard = 0;
 
 	bitboard |= GetKingAttacks(color == Types::Color::White ? gameState.WhiteKing : gameState.BlackKing);
-	bitboard |= GetQueenAttacks(color == Types::Color::White ? gameState.WhiteQueen : gameState.BlackQueen);
-	bitboard |= GetRookAttacks(color == Types::Color::White ? gameState.WhiteRook : gameState.BlackRook);
-	bitboard |= GetBishopAttacks(color == Types::Color::White ? gameState.WhiteBishop : gameState.BlackBishop);
+	bitboard |= GetQueenAttacks(color == Types::Color::White ? gameState.WhiteQueen : gameState.BlackQueen, gameState);
+	bitboard |= GetRookAttacks(color == Types::Color::White ? gameState.WhiteRook : gameState.BlackRook, gameState);
+	bitboard |= GetBishopAttacks(color == Types::Color::White ? gameState.WhiteBishop : gameState.BlackBishop, gameState);
 	bitboard |= GetKnightAttacks(color == Types::Color::White ? gameState.WhiteKnight : gameState.BlackKnight);
 	bitboard |= GetPawnAttacks(color == Types::Color::White ? gameState.WhitePawn : gameState.BlackPawn, color);
 
@@ -166,29 +166,29 @@ uint64_t MoveGeneration::GetKingAttacks(const uint64_t bitboard)
 
 	return attacks;
 }
-uint64_t MoveGeneration::GetQueenAttacks(const uint64_t bitboard)
+uint64_t MoveGeneration::GetQueenAttacks(const uint64_t bitboard, const GameState& gameState)
 {
-	uint64_t attacks = GetRookAttacks(bitboard);
-	attacks |= GetBishopAttacks(bitboard);
+	uint64_t attacks = GetRookAttacks(bitboard, gameState);
+	attacks |= GetBishopAttacks(bitboard, gameState);
 	return attacks;
 }
-uint64_t MoveGeneration::GetRookAttacks(const uint64_t bitboard)
+uint64_t MoveGeneration::GetRookAttacks(const uint64_t bitboard, const GameState& gameState)
 {
-	std::vector<uint8_t> locations = Types::SerialiseBitboard(bitboard);
+	const std::vector<uint8_t> locations = Types::SerialiseBitboard(bitboard);
 	uint64_t attacks = 0;
-	for(auto i = locations.begin(); i != locations.end(); ++i)
+	for (unsigned const char& location : locations)
 	{
-		attacks |= GetRookAttacks(*i);
+		attacks |= Tables::GetRookMoves(location, gameState);
 	}
 	return attacks;
 }
-uint64_t  MoveGeneration::GetBishopAttacks(const uint64_t bitboard)
+uint64_t  MoveGeneration::GetBishopAttacks(const uint64_t bitboard, const GameState& gameState)
 {
-	std::vector<uint8_t> locations = Types::SerialiseBitboard(bitboard);
+	const std::vector<uint8_t> locations = Types::SerialiseBitboard(bitboard);
 	uint64_t attacks = 0;
-	for(auto i = locations.begin(); i != locations.end(); ++i)
+	for (unsigned const char& location : locations)
 	{
-		attacks |= GetBishopAttacks(*i);
+		attacks |= Tables::GetBishopMoves(location, gameState);
 	}
 	return attacks;
 }

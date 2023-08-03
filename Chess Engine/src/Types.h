@@ -3,6 +3,8 @@
 #include <vector>
 #include <list>
 
+class GameState;
+
 namespace Types {
 	/* Enums */
 	enum Color: uint8_t
@@ -86,6 +88,8 @@ namespace Types {
 	extern uint8_t PopCount(uint64_t);
 	extern void PrintBitboard(uint64_t bitboard);
 	extern void PrintMove(uint32_t move);
+	extern void PrintMoveSquare(uint32_t move);
+	void PrintFullBoard(const GameState& gameState);
 
 	extern std::vector<uint8_t> SerialiseBitboard(uint64_t bitboard);
 	extern uint8_t BitScanForward(uint64_t bitboard);

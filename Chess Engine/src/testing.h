@@ -7,5 +7,6 @@ class Testing
 {
 public:
 	static uint64_t Perft(int depth, GameState& gameState);
+	static void Divide(int depth, GameState& gameState);
 };
 

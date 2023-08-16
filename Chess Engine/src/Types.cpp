@@ -159,7 +159,7 @@ namespace Types
 			{
 				const int i = j * 8 + k;
 				char piece = ' ';
-				switch (gameState.GetPiece(i, White))
+				switch (gameState.GetPiece(static_cast<uint8_t>(i), White))
 				{
 				case Types::Pawn:
 				{
@@ -193,7 +193,7 @@ namespace Types
 				}
 				default:
 				{
-					switch (gameState.GetPiece(i, Black))
+					switch (gameState.GetPiece(static_cast<uint8_t>(i), Black))
 					{
 					case Types::Pawn:
 					{

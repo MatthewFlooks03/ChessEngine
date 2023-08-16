@@ -19,7 +19,6 @@ GameState::GameState()
 	BlackPawn = 0ULL;
 
 	EnPassantSquare = 0ULL;
-	PreviousEnPassantSquare = 0ULL;
 
 	CastlingRights = 0;
 
@@ -159,7 +158,6 @@ GameState::GameState(const GameState* gameState)
 	BlackKnight = gameState->BlackKnight;
 	BlackPawn = gameState->BlackPawn;
 	EnPassantSquare = gameState->EnPassantSquare;
-	PreviousEnPassantSquare = gameState->PreviousEnPassantSquare;
 	CastlingRights = gameState->CastlingRights;
 	SideToMove = gameState->SideToMove;
 	MoveHistory = gameState->MoveHistory;
@@ -170,7 +168,7 @@ uint8_t GameState::FenIntDecode(const uint8_t i)
 	return (7-i/8)*8 + i%8;
 }
 
-uint64_t GameState::operator[](const uint8_t bitboard) const
+uint64_t GameState::operator[](const uint8_t& bitboard) const
 {
 	switch(bitboard)
 	{
@@ -204,7 +202,7 @@ uint64_t GameState::operator[](const uint8_t bitboard) const
 			throw std::invalid_argument("Invalid bitboard index");
 	}
 }
-uint64_t & GameState::operator[](const uint8_t bitboard)
+uint64_t & GameState::operator[](const uint8_t& bitboard)
 {
 	switch(bitboard)
 	{
@@ -236,6 +234,85 @@ uint64_t & GameState::operator[](const uint8_t bitboard)
 			return EnPassantSquare;
 		default:
 			throw std::invalid_argument("Invalid bitboard index");
+	}
+}
+
+bool GameState::operator==(const GameState& gs) const
+{
+	const bool result = 
+			this->WhiteKing == gs.WhiteKing &&
+			this->WhiteQueen == gs.WhiteQueen &&
+			this->WhiteRook == gs.WhiteRook &&
+			this->WhiteBishop == gs.WhiteBishop &&
+			this->WhiteKnight == gs.WhiteKnight &&
+			this->WhitePawn == gs.WhitePawn &&
+			this->BlackKing == gs.BlackKing &&
+			this->BlackQueen == gs.BlackQueen &&
+			this->BlackRook == gs.BlackRook &&
+			this->BlackBishop == gs.BlackBishop &&
+			this->BlackKnight == gs.BlackKnight &&
+			this->BlackPawn == gs.BlackPawn &&
+			this->EnPassantSquare == gs.EnPassantSquare &&
+			this->CastlingRights == gs.CastlingRights &&
+			this->SideToMove == gs.SideToMove &&
+			this->MoveHistory == gs.MoveHistory;
+
+	return result;
+}
+
+bool GameState::operator!=(const GameState& gs) const
+{
+	return !(*this == gs);
+}
+
+void GameState::GetDifference(const GameState& gs) const
+{
+	std::cout << "Differences in:" << std::endl;
+
+	if (this->WhiteKing != gs.WhiteKing) {
+		std::cout << "\t WhiteKing" << std::endl;
+	}
+	if (this->WhiteQueen != gs.WhiteQueen) {
+		std::cout << "\t WhiteQueen" << std::endl;
+	}
+	if (this->WhiteBishop != gs.WhiteBishop) {
+		std::cout << "\t WhiteBishop" << std::endl;
+	}
+	if (this->WhiteRook != gs.WhiteRook) {
+		std::cout << "\t WhiteRook" << std::endl;
+	}
+	if (this->WhiteKnight != gs.WhiteKnight) {
+		std::cout << "\t WhiteKnight" << std::endl;
+	}
+	if (this->WhitePawn != gs.WhitePawn) {
+		std::cout << "\t WhitePawn" << std::endl;
+	}
+	if (this->BlackKing != gs.BlackKing) {
+		std::cout << "\t BlackKing" << std::endl;
+	}
+	if (this->BlackQueen != gs.BlackQueen) {
+		std::cout << "\t BlackQueen" << std::endl;
+	}
+	if (this->BlackBishop != gs.BlackBishop) {
+		std::cout << "\t BlackBishop" << std::endl;
+	}
+	if (this->BlackKnight != gs.BlackKnight) {
+		std::cout << "\t BlackKnight" << std::endl;
+	}
+	if (this->BlackPawn != gs.BlackPawn) {
+		std::cout << "\t BlackPawn" << std::endl;
+	}
+	if (this->EnPassantSquare != gs.EnPassantSquare) {
+		std::cout << "\t EnPassantSquare" << std::endl;
+	}
+	if (this->CastlingRights != gs.CastlingRights) {
+		std::cout << "\t CastlingRights" << std::endl;
+	}
+	if (this->SideToMove != gs.SideToMove) {
+		std::cout << "\t SideToMove" << std::endl;
+	}
+	if (this->MoveHistory != gs.MoveHistory) {
+		std::cout << "\t MoveHistory" << std::endl;
 	}
 }
 
@@ -258,7 +335,7 @@ uint8_t GameState::GetPiece(const uint8_t square, const uint8_t color) const
 	return Types::Piece::None;
 }
 
-bool GameState::ExecuteMove(const uint32_t move)
+bool GameState::OldExecuteMove(const uint32_t move)
 {
 	/* Add Move to History */
 	this->MoveHistory->push_back(move);
@@ -301,100 +378,83 @@ bool GameState::ExecuteMove(const uint32_t move)
 	const uint8_t promotionRank = color == Types::White ? 7 : 0;
 	if(pieceMoved == Types::Pawn && Types::GetRank(finalPosition) == promotionRank)
 	{
-		this->operator[](pieceMoved + offset) = Types::ClearBit(bitboard, finalPosition);
+		this->operator[](pieceMoved + offset) = Types::ClearBit(this->operator[](pieceMoved + offset), finalPosition);
 
-		this->operator[](promotion + offset) = Types::SetBit(bitboard, finalPosition);
+		this->operator[](promotion + offset) = Types::SetBit(this->operator[](promotion + offset), finalPosition);
 	}
 
 	/* Castling Checks */
 	const uint8_t oppositeColor = color == Types::White ? Types::Black : Types::White;
+	bool legal = true;
 	if(castling != 0)
 	{
 		uint8_t rookInitialPos;
 		uint8_t rookFinalPos;
-		bool legal;
 		switch(castling)
 		{
 			case Types::CastlingRights::WhiteKingSide:
-				legal = !(MoveGeneration::GetAllAttacks(*this, oppositeColor) & 0x0000000000000060);
+				legal = !(MoveGeneration::GetAllAttacks(*this, oppositeColor) & 0x0000000000000060) && (this->CastlingRights & 0b1000);
 				rookInitialPos = 7;
 				rookFinalPos = 5;
 				break;
 			case Types::CastlingRights::WhiteQueenSide:
-				legal = !(MoveGeneration::GetAllAttacks(*this, oppositeColor) & 0x000000000000000E);
+				legal = !(MoveGeneration::GetAllAttacks(*this, oppositeColor) & 0x000000000000000E) && (this->CastlingRights & 0b100);
 				rookInitialPos = 0;
 				rookFinalPos = 3;
 				break;
-		case Types::CastlingRights::BlackKingSide:
-				legal = !(MoveGeneration::GetAllAttacks(*this, oppositeColor) & 0x6000000000000000);
+			case Types::CastlingRights::BlackKingSide:
+				legal = !(MoveGeneration::GetAllAttacks(*this, oppositeColor) & 0x6000000000000000) && (this->CastlingRights & 0b10);
 				rookInitialPos = 63;
 				rookFinalPos = 61;
 				break;
 			case Types::CastlingRights::BlackQueenSide:
-				legal = !(MoveGeneration::GetAllAttacks(*this, oppositeColor) & 0xE00000000000000);
+				legal = !(MoveGeneration::GetAllAttacks(*this, oppositeColor) & 0xc00000000000000) && (this->CastlingRights & 0b1);
 				rookInitialPos = 56;
 				rookFinalPos = 59;
 				break;
 			default:
 				throw std::invalid_argument("Invalid castling rights");
 		}
-		if(legal) // Move Rook
-		{
-			uint64_t rookBitboard = this->operator[](Types::Piece::Rook + offset);
-			rookBitboard = Types::ClearBit(rookBitboard, rookInitialPos);
-			rookBitboard = Types::SetBit(rookBitboard, rookFinalPos);
-			this->operator[](Types::Piece::Rook + offset) = rookBitboard;
+
+		/* Move Rook */
+		uint64_t rookBitboard = this->operator[](Types::Piece::Rook + offset);
+		rookBitboard = Types::ClearBit(rookBitboard, rookInitialPos);
+		rookBitboard = Types::SetBit(rookBitboard, rookFinalPos);
+		this->operator[](Types::Piece::Rook + offset) = rookBitboard;
 				
-			this->CastlingRights &= ~castling; // Update Castling Rights
-		}
-		else
-		{
-			ReverseMove(move);
-		std::cout << "FAILED: Castling" << std::endl;
-			return false;
-		}
+		this->CastlingRights &= ~castling; // Update Castling Rights
 	}
 
-	/* Add En Passant Square */
-	this->PreviousEnPassantSquare = this->EnPassantSquare;
-	if(enPassant != Types::None)
-	{
-		this->EnPassantSquare = Types::IntToBitboard(enPassant);
-	}
-	else
-	{
-		//Remove Enpassant Square
-		this->EnPassantSquare = 0;
-	}
-
+	/* Set En Passant Square */
+	this->EnPassantSquare = Types::IntToBitboard(enPassant) & 0xff0000ff0000;
 	
 	/* Update Turn */
 	this->NextTurn();
 
 	/* Check for Check */
 	const uint64_t kingBitboard = color == Types::White ? this->WhiteKing : this->BlackKing;
-	uint64_t attacks = MoveGeneration::GetQueenAttacks(this->WhiteQueen, *this);
+/*
+	uint64_t attacks = MoveGeneration::GetQueenAttacks(this->WhiteQueen, *this, oppositeColor);
 	Types::PrintMove(move);
 	Types::PrintBitboard(attacks);
 	Types::PrintBitboard(kingBitboard & attacks);
-	if(kingBitboard & MoveGeneration::GetAllAttacks(*this, oppositeColor))
+*/
+	if((kingBitboard & MoveGeneration::GetAllAttacks(*this, oppositeColor)) | !legal)
 	{
-		ReverseMove(move);
-		std::cout << "FAILED" << std::endl;
+		OldReverseMove(move);
+		//std::cout << "FAILED" << std::endl;
 		return false;
 	}
 
 	return true;
 }
-
-void GameState::ReverseMove(const uint32_t move)
+void GameState::OldReverseMove(const uint32_t move)
 {
 	const uint8_t color = (move >> 31) & 0b1;
 	const uint8_t pieceMoved = (move >> 28) & 0b111;
 	const uint8_t pieceCaptured = (move >> 25) & 0b111;
 	const uint8_t initialPosition = (move >> 19) & 0b111111;
 	const uint8_t finalPosition = (move >> 13) & 0b111111;
-	const uint8_t enPassant = (move >> 7) & 0b111111;
 	const uint8_t promotion = (move >> 4) & 0b111;
 	const uint8_t castling = move & 0b1111;
 
@@ -427,9 +487,9 @@ void GameState::ReverseMove(const uint32_t move)
 	const uint8_t promotionRank = color == Types::White ? 7 : 0;
 	if(pieceMoved == Types::Pawn && Types::GetRank(finalPosition) == promotionRank)
 	{
-		this->operator[](pieceMoved + offset) = Types::SetBit(bitboard, finalPosition);
+		this->operator[](pieceMoved + offset) = Types::SetBit(this->operator[](pieceMoved + offset), initialPosition);
 
-		this->operator[](promotion + offset) = Types::ClearBit(bitboard, finalPosition);
+		this->operator[](promotion + offset) = Types::ClearBit(this->operator[](promotion + offset), finalPosition);
 	}
 
 	/* Castling Checks */
@@ -467,24 +527,261 @@ void GameState::ReverseMove(const uint32_t move)
 		this->CastlingRights |= castling; // Update Castling Rights
 	}
 
-	/* Add En Passant Square */
-	this->EnPassantSquare = PreviousEnPassantSquare;
-
 	/* Remove Move from History */
 	this->MoveHistory->pop_back();
+
+	/* Add En Passant Square */
+	EnPassantSquare = ((*std::prev(MoveHistory->end())) >> 7) & 0b111111;
+
 
 	/* Switch Turn */
 	this->PreviousTurn();
 }
+
+bool GameState::ExecuteMove(const uint32_t move)
+{
+	const uint8_t color = (move >> 31) & 0b1;
+	const uint8_t pieceMoved = (move >> 28) & 0b111;
+	const uint8_t pieceCaptured = (move >> 25) & 0b111;
+	const uint8_t initialPosition = (move >> 19) & 0b111111;
+	const uint8_t finalPosition = (move >> 13) & 0b111111;
+	const uint8_t enPassant = (move >> 7) & 0b111111;
+	const uint8_t promotion = (move >> 4) & 0b111;
+	const uint8_t castling = move & 0b1111;
+
+	const uint8_t offset = color == Types::Color::White ? 0 : 6;
+	const uint8_t oppositeOffset = color == Types::Color::White ? 6 : 0;
+
+	uint64_t& pieceMovedBitboard = this->operator[](pieceMoved + offset);
+	const uint8_t oppositeColor = color == Types::Color::White ? Types::Color::Black : Types::Color::White;
+
+	bool illegalMove = false;
+
+	/* Move Piece */
+	pieceMovedBitboard = Types::SetBit(pieceMovedBitboard, finalPosition);
+	pieceMovedBitboard = Types::ClearBit(pieceMovedBitboard, initialPosition);
+
+	/* Capturing */
+	if(pieceCaptured == Types::None)
+	{
+		//Do Nothing
+	}
+	else if(pieceCaptured && pieceCaptured != Types::EnPassant)
+	{
+		uint64_t& pieceCapturedBitboard = this->operator[](pieceCaptured + oppositeOffset);
+		pieceCapturedBitboard = Types::ClearBit(pieceCapturedBitboard, finalPosition);
+	}
+	else if (pieceCaptured == Types::EnPassant)
+	{
+		uint64_t& pieceCapturedBitboard = this->operator[](Types::Pawn + oppositeOffset);
+		const uint8_t pawnCapturedSquare = color == Types::White ? finalPosition - 8 : finalPosition + 8;
+		pieceCapturedBitboard = Types::ClearBit(pieceCapturedBitboard, pawnCapturedSquare);
+	}
+
+	/* Promotion */
+	if(promotion != Types::None)
+	{
+		uint64_t& piecePromotionBitboard = this->operator[](promotion + offset);
+		pieceMovedBitboard = Types::ClearBit(pieceMovedBitboard, finalPosition);
+		piecePromotionBitboard = Types::SetBit(piecePromotionBitboard, finalPosition);
+	}
+
+	const uint64_t allOpposingAttacks = MoveGeneration::GetAllAttacks(*this, oppositeColor); // No need to update later, as rook castling movements cannot open king up to attack
+
+	/* Castling */
+	if(castling) // King has already been moved
+	{
+		uint8_t rookInitialPos;
+		uint8_t rookFinalPos;
+		uint64_t legalMask;
+		uint8_t castlingMask;
+
+		switch (castling)
+		{
+			case Types::CastlingRights::WhiteKingSide:
+			{
+				rookInitialPos = 7;
+				rookFinalPos = 5;
+				legalMask = 0x30;
+				castlingMask = Types::CastlingRights::WhiteKingSide;
+				break;
+			}
+			case Types::CastlingRights::WhiteQueenSide:
+			{
+				rookInitialPos = 0;
+				rookFinalPos = 3;
+				legalMask = 0x18;
+				castlingMask = Types::CastlingRights::WhiteQueenSide;
+				break;
+			}
+			case Types::CastlingRights::BlackKingSide:
+			{
+				rookInitialPos = 63;
+				rookFinalPos = 61;
+				legalMask = 0x3000000000000000;
+				castlingMask = Types::CastlingRights::BlackKingSide;
+				break;
+			}
+			case Types::CastlingRights::BlackQueenSide:
+			{
+				rookInitialPos = 56;
+				rookFinalPos = 59;
+				legalMask = 0x1800000000000000;
+				castlingMask = Types::CastlingRights::BlackQueenSide;
+				break;
+			}
+			default:
+			{
+				throw std::invalid_argument("Invalid castling rights");
+			}
+		}
+
+		illegalMove |= static_cast<bool>(allOpposingAttacks & legalMask);
+		illegalMove |= !(this->CastlingRights & castlingMask);
+
+		uint64_t& rookBitboard = this->operator[](Types::Piece::Rook + offset);
+		rookBitboard = Types::SetBit(rookBitboard, rookFinalPos);
+		rookBitboard = Types::ClearBit(rookBitboard, rookInitialPos);
+
+		CastlingRights &= ~castlingMask; // Update Castling Rights
+	}
+
+	/* Remove and Reset En Passant Square */
+	EnPassantSquare = Types::IntToBitboard(enPassant);
+
+	/* Check for Check */
+	const uint64_t& kingBitboard = this->operator[](Types::Piece::King + offset);
+	illegalMove |= static_cast<bool>(kingBitboard & allOpposingAttacks);
+
+	/* End Move */
+	NextTurn();
+	MoveHistory->push_back(move);
+
+	if (illegalMove)
+	{
+		ReverseMove();
+		return false;
+	}
+	return true;
+}
+void GameState::ReverseMove()
+{
+	/* Get Move */
+	const uint32_t move = MoveHistory->back();
+	MoveHistory->pop_back();
+
+	const uint8_t color = (move >> 31) & 0b1;
+	const uint8_t pieceMoved = (move >> 28) & 0b111;
+	const uint8_t pieceCaptured = (move >> 25) & 0b111;
+	const uint8_t initialPosition = (move >> 19) & 0b111111;
+	const uint8_t finalPosition = (move >> 13) & 0b111111;
+	const uint8_t promotion = (move >> 4) & 0b111;
+	const uint8_t castling = move & 0b1111;
+
+	const uint8_t offset = color == Types::Color::White ? 0 : 6;
+	const uint8_t oppositeOffset = color == Types::Color::White ? 6 : 0;
+
+	uint64_t& pieceMovedBitboard = this->operator[](pieceMoved + offset);
+
+	/* Clear EnPassant */
+	//EnPassant gets set when reversing capture
+	EnPassantSquare = 0;
+
+	/* Castling */
+	if(castling)
+	{
+		uint8_t rookInitialPos;
+		uint8_t rookFinalPos;
+		uint8_t castlingMask;
+
+		switch (castling)
+		{
+			case Types::CastlingRights::WhiteKingSide:
+			{
+				rookInitialPos = 7;
+				rookFinalPos = 5;
+				castlingMask = Types::CastlingRights::WhiteKingSide;
+				break;
+			}
+			case Types::CastlingRights::WhiteQueenSide:
+			{
+				rookInitialPos = 0;
+				rookFinalPos = 3;
+				castlingMask = Types::CastlingRights::WhiteQueenSide;
+				break;
+			}
+			case Types::CastlingRights::BlackKingSide:
+			{
+				rookInitialPos = 63;
+				rookFinalPos = 61;
+				castlingMask = Types::CastlingRights::BlackKingSide;
+				break;
+			}
+			case Types::CastlingRights::BlackQueenSide:
+			{
+				rookInitialPos = 56;
+				rookFinalPos = 59;
+				castlingMask = Types::CastlingRights::BlackQueenSide;
+				break;
+			}
+			default:
+			{
+				throw std::invalid_argument("Invalid castling rights for Reverse??");
+			}
+		}
+
+		uint64_t& rookBitboard = this->operator[](Types::Piece::Rook + offset);
+		rookBitboard = Types::ClearBit(rookBitboard, rookFinalPos);
+		rookBitboard = Types::SetBit(rookBitboard, rookInitialPos);
+
+		CastlingRights |= castlingMask; // Update Castling Rights
+	}
+
+	/* Promotion */
+	if(promotion != Types::None)
+	{
+		uint64_t& piecePromotionBitboard = this->operator[](promotion + offset);
+		pieceMovedBitboard = Types::SetBit(pieceMovedBitboard, finalPosition);
+		piecePromotionBitboard = Types::ClearBit(piecePromotionBitboard, finalPosition);
+	}
+
+	/* Capture */
+	if(pieceCaptured == Types::None)
+	{
+		//Do Nothing
+	}
+	else if(pieceCaptured && pieceCaptured != Types::EnPassant)
+	{
+		uint64_t& pieceCapturedBitboard = this->operator[](pieceCaptured + oppositeOffset);
+		pieceCapturedBitboard = Types::SetBit(pieceCapturedBitboard, finalPosition);
+	}
+	else if (pieceCaptured == Types::EnPassant)
+	{
+		uint64_t& pieceCapturedBitboard = this->operator[](Types::Pawn + oppositeOffset);
+		const uint8_t pawnCapturedSquare = color == Types::White ? finalPosition - 8 : finalPosition + 8;
+		pieceCapturedBitboard = Types::SetBit(pieceCapturedBitboard, pawnCapturedSquare);
+
+		EnPassantSquare = Types::IntToBitboard(finalPosition);// Set EnPassant
+	}
+
+	/* Piece Move */
+	pieceMovedBitboard = Types::ClearBit(pieceMovedBitboard, finalPosition);
+	pieceMovedBitboard = Types::SetBit(pieceMovedBitboard, initialPosition);
+
+	/* End Move */
+	PreviousTurn();
+}
+
 
 void GameState::NextTurn()
 {
 	this->SideToMove = this->SideToMove == Types::White ? Types::Black : Types::White;
 }
 
+
 void GameState::PreviousTurn()
 {
-	NextTurn();
+	this->SideToMove = this->SideToMove == Types::White ? Types::Black : Types::White;
 }
 
 

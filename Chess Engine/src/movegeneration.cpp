@@ -11,7 +11,7 @@ std::vector<uint32_t> MoveGeneration::GetAllPseudoMoves(const GameState& gameSta
 void MoveGeneration::GetPseudoMoves(const GameState& gameState, const uint8_t pieceMoved,std::vector<uint32_t>* moves)
 {
 	uint64_t bitboard;
-	uint64_t (*getFunction) (const uint8_t, const GameState&);
+	uint64_t (*getFunction) (const uint8_t, const GameState&, const uint8_t);
 
 	switch (pieceMoved)
 	{
@@ -59,20 +59,20 @@ void MoveGeneration::GetPseudoMoves(const GameState& gameState, const uint8_t pi
 
 	const uint8_t color = gameState.SideToMove; // COLOR
 
-	std::vector<uint8_t> locations = Types::SerialiseBitboard(bitboard);
+	const std::vector<uint8_t> locations = Types::SerialiseBitboard(bitboard);
 
-	for(auto iterator = locations.begin(); iterator != locations.end(); ++iterator)
+	for (const unsigned char initialPosition : locations)
 	{
-		const uint8_t initialPosition = *iterator; // INITIAL POSITION
+		// INITIAL POSITION
 
-		const uint64_t movesBitboard = getFunction(initialPosition, gameState);
+		const uint64_t movesBitboard = getFunction(initialPosition, gameState, color);
 
 		std::vector<uint8_t> movesList = Types::SerialiseBitboard(movesBitboard);
 
-		for (auto it = movesList.begin(); it != movesList.end(); ++it)
+		for (const unsigned char& it : movesList)
 		{
-			const uint8_t finalPosition = *it; // FINAL POSITION
-			const uint8_t pieceCaptured = gameState.GetPiece(*it, 1 ^ gameState.SideToMove); // CAPTURED PIECE
+			const uint8_t finalPosition = it; // FINAL POSITION
+			const uint8_t pieceCaptured = gameState.GetPiece(it, 1 ^ gameState.SideToMove); // CAPTURED PIECE
 
 			uint8_t castling = 0; // CASTLING
 			if (pieceMoved == Types::King)
@@ -143,16 +143,16 @@ uint64_t MoveGeneration::GetAllAttacks(const GameState& gameState, const uint8_t
 {
 	uint64_t bitboard = 0;
 
-	bitboard |= GetKingAttacks(color == Types::Color::White ? gameState.WhiteKing : gameState.BlackKing);
-	bitboard |= GetQueenAttacks(color == Types::Color::White ? gameState.WhiteQueen : gameState.BlackQueen, gameState);
-	bitboard |= GetRookAttacks(color == Types::Color::White ? gameState.WhiteRook : gameState.BlackRook, gameState);
-	bitboard |= GetBishopAttacks(color == Types::Color::White ? gameState.WhiteBishop : gameState.BlackBishop, gameState);
-	bitboard |= GetKnightAttacks(color == Types::Color::White ? gameState.WhiteKnight : gameState.BlackKnight);
+	bitboard |= GetKingAttacks(color == Types::Color::White ? gameState.WhiteKing : gameState.BlackKing, color);
+	bitboard |= GetQueenAttacks(color == Types::Color::White ? gameState.WhiteQueen : gameState.BlackQueen, gameState, color);
+	bitboard |= GetRookAttacks(color == Types::Color::White ? gameState.WhiteRook : gameState.BlackRook, gameState, color);
+	bitboard |= GetBishopAttacks(color == Types::Color::White ? gameState.WhiteBishop : gameState.BlackBishop, gameState, color);
+	bitboard |= GetKnightAttacks(color == Types::Color::White ? gameState.WhiteKnight : gameState.BlackKnight, color);
 	bitboard |= GetPawnAttacks(color == Types::Color::White ? gameState.WhitePawn : gameState.BlackPawn, color);
 
 	return bitboard;
 }
-uint64_t MoveGeneration::GetKingAttacks(const uint64_t bitboard)
+uint64_t MoveGeneration::GetKingAttacks(const uint64_t bitboard, uint8_t color)
 {
 	using namespace Types;
 	uint64_t attacks = North(bitboard);
@@ -166,33 +166,33 @@ uint64_t MoveGeneration::GetKingAttacks(const uint64_t bitboard)
 
 	return attacks;
 }
-uint64_t MoveGeneration::GetQueenAttacks(const uint64_t bitboard, const GameState& gameState)
+uint64_t MoveGeneration::GetQueenAttacks(const uint64_t bitboard, const GameState& gameState, uint8_t color)
 {
-	uint64_t attacks = GetRookAttacks(bitboard, gameState);
-	attacks |= GetBishopAttacks(bitboard, gameState);
+	uint64_t attacks = GetRookAttacks(bitboard, gameState, color);
+	attacks |= GetBishopAttacks(bitboard, gameState, color);
 	return attacks;
 }
-uint64_t MoveGeneration::GetRookAttacks(const uint64_t bitboard, const GameState& gameState)
-{
-	const std::vector<uint8_t> locations = Types::SerialiseBitboard(bitboard);
-	uint64_t attacks = 0;
-	for (unsigned const char& location : locations)
-	{
-		attacks |= Tables::GetRookMoves(location, gameState);
-	}
-	return attacks;
-}
-uint64_t  MoveGeneration::GetBishopAttacks(const uint64_t bitboard, const GameState& gameState)
+uint64_t MoveGeneration::GetRookAttacks(const uint64_t bitboard, const GameState& gameState, uint8_t color)
 {
 	const std::vector<uint8_t> locations = Types::SerialiseBitboard(bitboard);
 	uint64_t attacks = 0;
 	for (unsigned const char& location : locations)
 	{
-		attacks |= Tables::GetBishopMoves(location, gameState);
+		attacks |= Tables::GetRookMoves(location, gameState, color);
 	}
 	return attacks;
 }
-uint64_t MoveGeneration::GetKnightAttacks(const uint64_t bitboard)
+uint64_t  MoveGeneration::GetBishopAttacks(const uint64_t bitboard, const GameState& gameState, uint8_t color)
+{
+	const std::vector<uint8_t> locations = Types::SerialiseBitboard(bitboard);
+	uint64_t attacks = 0;
+	for (unsigned const char& location : locations)
+	{
+		attacks |= Tables::GetBishopMoves(location, gameState, color);
+	}
+	return attacks;
+}
+uint64_t MoveGeneration::GetKnightAttacks(const uint64_t bitboard, uint8_t color)
 {
 	using namespace Types;
 	uint64_t attacks = NorthEast(North(bitboard));

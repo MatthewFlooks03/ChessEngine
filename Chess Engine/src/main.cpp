@@ -10,39 +10,22 @@ int main()
 	Tables::Init();
 
 	//Correct up to depth 6, from starting position
+	GameState gameState("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 ");
 
+	//Correct up to depth 3
+	//GameState gameState("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - ");
 
-	//GameState gameState("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 ");
+	//Correct up to depth 5
+	//GameState gameState("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - ");
 
-	//GameState gameState("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
-	//GameState gameState("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/2KR3R b kq - 1 1");
-	//GameState gameState("r3k2r/p1pp1pb1/bn2pnp1/2qPN3/1p2P3/2N2Q1p/PPPBBPPP/2KR3R w kq - 2 2");
-	//GameState gameState("r3k2r/p1pp1pb1/bn2pQp1/2qPN3/1p2P3/2N4p/PPPBBPPP/2KR3R b kq - 0 2");
-	GameState gameState("r3k2r/p1pp1pb1/bn2pQp1/2q5/1p2P3/P1N4p/PPPBBP2/2KR4 b kq - 0 2");
+	//GameState gameState("r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1");
+	//GameState gameState("r3k2r/Pppp1ppp/1b3nbN/nPB5/B1P1P3/q4N2/Pp1P2PP/R2Q1RK1 b kq - 1 1");
+	//GameState gameState("4k2r/rppp1ppp/1b3nbN/nPB5/B1P1P3/q4N2/Pp1P2PP/R2Q1RK1 w k - 0 2");
+	//GameState gameState("4k2r/rppp1ppp/1b3nbN/nPB5/B1P1P3/q4N2/Pp1P2PP/1R1Q1RK1 b k - 1 2");
 		
-	
-	
-	/*
-	uint32_t move = MoveGeneration::GetAllPseudoMoves(gameState)[2];
-	for (uint32_t move : MoveGeneration::GetAllPseudoMoves(gameState))
-	{
-		Types::PrintMove(move);
-		std::cout << std::bitset<4>(gameState.CastlingRights) << std::endl;
-		Types::PrintFullBoard(gameState);
-
-		if (gameState.ExecuteMove(move))
-		{
-			Types::PrintFullBoard(gameState);
-			std::cout << "PASSED";
-
-			gameState.ReverseMove(move);
-		}
-		Types::PrintFullBoard(gameState);
-	}
-	*/
-	
-
-	Testing::Divide(1, gameState);
+			//Types::PrintFullBoard(gameState);
+	Testing::Divide(4, gameState);
+			//Types::PrintFullBoard(gameState);
 
 
 	/*

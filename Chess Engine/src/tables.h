@@ -5,13 +5,13 @@
 
 class Tables {
 public:
-	static uint64_t GetKingMoves(uint8_t square, const GameState& gameState);
-	static uint64_t GetKnightMoves(uint8_t square, const GameState& gameState);
-	static uint64_t GetBlackPawnMoves(uint8_t square, const GameState& gameState);
-	static uint64_t GetWhitePawnMoves(uint8_t square, const GameState& gameState);
-	static uint64_t GetRookMoves(uint8_t square, const GameState& gameState);
-	static uint64_t GetBishopMoves(uint8_t square, const GameState& gameState);
-	static uint64_t GetQueenMoves(uint8_t square, const GameState& gameState);
+	static uint64_t GetKingMoves(uint8_t square, const GameState& gameState, uint8_t color);
+	static uint64_t GetKnightMoves(uint8_t square, const GameState& gameState, uint8_t color);
+	static uint64_t GetBlackPawnMoves(uint8_t square, const GameState& gameState, uint8_t color);
+	static uint64_t GetWhitePawnMoves(uint8_t square, const GameState& gameState, uint8_t color);
+	static uint64_t GetRookMoves(uint8_t square, const GameState& gameState, uint8_t color);
+	static uint64_t GetBishopMoves(uint8_t square, const GameState& gameState, uint8_t color);
+	static uint64_t GetQueenMoves(uint8_t square, const GameState& gameState, uint8_t color);
 
 	static void GetMagicTables(const uint8_t square, const bool rook, uint64_t* mask, uint64_t* magicNumber, uint8_t* indexBits);
 

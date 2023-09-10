@@ -87,7 +87,7 @@ uint64_t Tables::GetKingMoves(const uint8_t square, const GameState& gameState, 
 		{
 			moves |= 0x4000000000000000;
 		}
-		if(!(gameState.AllPieces() & 0xE00000000000000) && (gameState.CastlingRights & Types::BlackKingSide))
+		if(!(gameState.AllPieces() & 0xE00000000000000) && (gameState.CastlingRights & Types::BlackQueenSide))
 		{
 			moves |= 0x0400000000000000;
 		}

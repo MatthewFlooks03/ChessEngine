@@ -252,23 +252,22 @@ uint64_t & GameState::operator[](const uint8_t& bitboard)
 
 bool GameState::operator==(const GameState& gs) const
 {
-	const bool result = 
-			this->WhiteKing == gs.WhiteKing &&
-			this->WhiteQueen == gs.WhiteQueen &&
-			this->WhiteRook == gs.WhiteRook &&
-			this->WhiteBishop == gs.WhiteBishop &&
-			this->WhiteKnight == gs.WhiteKnight &&
-			this->WhitePawn == gs.WhitePawn &&
-			this->BlackKing == gs.BlackKing &&
-			this->BlackQueen == gs.BlackQueen &&
-			this->BlackRook == gs.BlackRook &&
-			this->BlackBishop == gs.BlackBishop &&
-			this->BlackKnight == gs.BlackKnight &&
-			this->BlackPawn == gs.BlackPawn &&
-			this->EnPassantSquare == gs.EnPassantSquare &&
-			this->CastlingRights == gs.CastlingRights &&
-			this->SideToMove == gs.SideToMove &&
-			this->MoveHistory == gs.MoveHistory;
+	const bool result =
+		this->WhiteKing == gs.WhiteKing &&
+		this->WhiteQueen == gs.WhiteQueen &&
+		this->WhiteRook == gs.WhiteRook &&
+		this->WhiteBishop == gs.WhiteBishop &&
+		this->WhiteKnight == gs.WhiteKnight &&
+		this->WhitePawn == gs.WhitePawn &&
+		this->BlackKing == gs.BlackKing &&
+		this->BlackQueen == gs.BlackQueen &&
+		this->BlackRook == gs.BlackRook &&
+		this->BlackBishop == gs.BlackBishop &&
+		this->BlackKnight == gs.BlackKnight &&
+		this->BlackPawn == gs.BlackPawn &&
+		this->EnPassantSquare == gs.EnPassantSquare &&
+		this->CastlingRights == gs.CastlingRights &&
+		this->SideToMove == gs.SideToMove;
 	return result;
 }
 
@@ -322,9 +321,6 @@ void GameState::GetDifference(const GameState& gs) const
 	}
 	if (this->SideToMove != gs.SideToMove) {
 		std::cout << "\t SideToMove" << std::endl;
-	}
-	if (this->MoveHistory->back() != gs.MoveHistory->back()) {
-		std::cout << "\t MoveHistory" << std::endl;
 	}
 }
 

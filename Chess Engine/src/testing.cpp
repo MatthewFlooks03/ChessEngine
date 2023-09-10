@@ -3,7 +3,6 @@
 
 uint64_t Testing::Perft(const int depth, Game& game )
 {
-	const GameState* gameState = game.CurrentState;
 
 	if(depth == 0)
 	{
@@ -11,43 +10,36 @@ uint64_t Testing::Perft(const int depth, Game& game )
 	}
 	uint64_t nodes = 0;
 
-	const std::vector<uint32_t> moves = MoveGeneration::GetAllPseudoMoves(*gameState);
+	const std::vector<uint32_t> moves = MoveGeneration::GetAllPseudoMoves(*game.CurrentState);
 	for (unsigned const int& move : moves)
 	{
-		GameState initialState = *gameState;
+		GameState initialState(*game.CurrentState);
 
 		if (game.ExecuteMove(move))
 		{
+
 			const uint64_t prevNodes = Perft(depth - 1, game);
 
-			const GameState movedState = *gameState;
+			const GameState movedState(*game.CurrentState);
 
 			nodes += prevNodes;
 			game.ReverseMove();
 
-			/*
-			for(int i = 0; i < 5 - depth; i++)
-			{
-				std::cout << "\t";
-			}
-			Types::PrintMoveSquare(move);
-			std::cout << ": " << prevNodes << std::endl;
-			*/
-			if((*gameState != initialState))
+
+			if((*game.CurrentState != initialState))
 			{
 				std::cout << "BAD REVERSE" << std::endl;
 				Types::PrintMove(move);
 
-				initialState.GetDifference(*gameState);
+				initialState.GetDifference(*game.CurrentState);
 
 				Types::PrintFullBoard(initialState);
 				Types::PrintFullBoard(movedState);
-				Types::PrintFullBoard(*gameState);
+				Types::PrintFullBoard(*game.CurrentState);
 				for (;;);
 			}
 
 		}
-				
 	}
 	return nodes;
 }

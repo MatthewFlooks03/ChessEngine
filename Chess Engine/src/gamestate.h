@@ -21,18 +21,16 @@ public:
 	uint8_t CastlingRights; // NA NA NA NA WK WQ BK BQ 
 	uint8_t SideToMove; // 0 - white, 1 - black
 
-	std::list<uint32_t>* MoveHistory;
+	uint64_t Hash;
+
+	GameState* PreviousState;
+	GameState* NextState;
+
 
 	constexpr uint64_t WhitePieces() const { return WhiteKing | WhiteQueen | WhiteRook | WhiteBishop | WhiteKnight | WhitePawn; } 
 	constexpr uint64_t BlackPieces() const { return BlackKing | BlackQueen | BlackRook | BlackBishop | BlackKnight | BlackPawn; }
 	
 	constexpr uint64_t AllPieces() const { return WhitePieces() | BlackPieces(); }
-
-	bool ExecuteMove(uint32_t move);
-	void ReverseMove();
-
-	bool OldExecuteMove(uint32_t move);
-	void OldReverseMove(uint32_t move);
 
 	void NextTurn();
 	void PreviousTurn();
@@ -51,4 +49,8 @@ public:
 	uint8_t GetPiece(uint8_t square, uint8_t color) const;
 
 	static uint8_t FenIntDecode(uint8_t i);
+
+private:
+	void UpdateHash(uint32_t move);
+	void GenerateHash();
 };

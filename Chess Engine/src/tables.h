@@ -1,6 +1,4 @@
 #pragma once
-#include <unordered_map>
-#include "gamestate.h"
 #include "types.h"
 
 class Tables {
@@ -14,6 +12,12 @@ public:
 	static uint64_t GetQueenMoves(uint8_t square, const GameState& gameState, uint8_t color);
 
 	static void GetMagicTables(const uint8_t square, const bool rook, uint64_t* mask, uint64_t* magicNumber, uint8_t* indexBits);
+
+	// Zobrist Hashing
+	// [W] K Q R B N P -> [B] K Q R B N P -> En Passant
+	static uint64_t ZobristTable[64][13];
+	static uint64_t ZobristSideToMove[2];
+	static uint64_t ZobristCastlingRights[16];
 
 	static void Init();
 
@@ -52,4 +56,7 @@ private:
 	static uint64_t GetRookSlidingMoves(const int square, const uint64_t blockers);
 	static uint64_t GetBishopSlidingMoves(const int square, const uint64_t blockers);
 	static uint16_t GetAllBlockers(uint64_t allBlockers[4096], const uint64_t andMask);
+
+	static void GenerateZobristBitSets();
+
 };

@@ -1,7 +1,7 @@
 #pragma once
 #include <iostream>
 #include <vector>
-#include <list>
+#include <unordered_map>
 
 class GameState;
 
@@ -78,6 +78,7 @@ namespace Types {
 	constexpr uint64_t GetFile(const int square) { return (square % 8); } // Get the file of a square
 	constexpr uint64_t GetRank(const int square) { return (square / 8); } // Get the rank of a square
 
+	constexpr uint32_t GenerateMove(const uint8_t color, const uint8_t piece, const uint8_t captured, const uint8_t initial, const uint8_t final, const uint8_t enPassant, const uint8_t promotion, const uint8_t castling) { return (color << 31) | (piece << 28) | (captured << 25) | (initial << 19) | (final << 13) | (enPassant << 7) | (promotion << 4) | castling; }
 
 	extern uint64_t SetBit(uint64_t bitboard, uint8_t square);
 	extern uint64_t ClearBit(uint64_t bitboard, uint8_t square);

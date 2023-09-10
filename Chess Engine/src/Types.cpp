@@ -1,5 +1,8 @@
 #include "types.h"
+
+#include "gamestate.h"
 #include "tables.h"
+
 
 namespace Types
 {
@@ -158,7 +161,7 @@ namespace Types
 			for (int k = 0; k < 8; k++)
 			{
 				const int i = j * 8 + k;
-				char piece = ' ';
+				char piece;
 				switch (gameState.GetPiece(static_cast<uint8_t>(i), White))
 				{
 				case Types::Pawn:
@@ -189,6 +192,11 @@ namespace Types
 				case Types::King:
 				{
 					piece = 'K';
+					break;
+				}
+				case Types::EnPassant:
+				{
+					piece = 'e';
 					break;
 				}
 				default:
@@ -227,8 +235,10 @@ namespace Types
 					}
 					default:
 					{
+						piece = ' ';
 						break;
 					}
+					
 					}
 					break;
 				}

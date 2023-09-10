@@ -1,4 +1,7 @@
 #include "tables.h"
+
+#include <random>
+
 #include "gamestate.h"
 
 std::unordered_map<uint64_t, uint64_t>** Tables::RookMoves;
@@ -17,6 +20,7 @@ void Tables::Init()
 
 	InitRookMoves();
 	InitBishopMoves();
+	GenerateZobristBitSets();
 }
 
 uint64_t Tables::GetRookMoves(const uint8_t square, const GameState& gameState, uint8_t color) 
@@ -474,3 +478,33 @@ uint8_t Tables::GetBishopIndexBits(const uint8_t square)
 {
 		return 64 - Types::PopCount(BISHOP_MAGIC_MASKS[square]);
 }
+
+/* Zobrist Hashing */
+
+uint64_t Tables::ZobristTable[64][13];
+uint64_t Tables::ZobristSideToMove[2];
+uint64_t Tables::ZobristCastlingRights[16];
+
+void Tables::GenerateZobristBitSets()
+{
+	std::mt19937_64 rngEngine(0);
+
+	for (auto& i : ZobristTable)
+	{
+		for (auto& j : i)
+		{
+			j = rngEngine();
+		}
+	}
+
+	for (auto& i : ZobristSideToMove)
+	{
+		i = rngEngine();
+	}
+
+	for(auto& i : ZobristCastlingRights)
+	{
+		i = rngEngine();
+	}
+}
+ 

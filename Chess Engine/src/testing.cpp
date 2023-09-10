@@ -1,4 +1,7 @@
 #include "testing.h"
+
+#include <chrono>
+
 #include "movegeneration.h"
 
 uint64_t Testing::Perft(const int depth, Game& game )
@@ -23,6 +26,7 @@ uint64_t Testing::Perft(const int depth, Game& game )
 			const GameState movedState(*game.CurrentState);
 
 			nodes += prevNodes;
+			
 			game.ReverseMove();
 
 
@@ -77,4 +81,35 @@ void Testing::Divide(const int depth, Game& game)
 	}
 	std::cout << "Moves: " << count << std::endl;
 	std::cout << "Nodes: " << allNodes << std::endl;
+}
+
+uint64_t Testing::Speed(int depth, Game& game, const std::chrono::time_point<std::chrono::steady_clock> start, const long long testTime)
+{
+	if (depth == 0)
+	{
+				return 1;
+	}
+
+	const auto now = std::chrono::high_resolution_clock::now();
+
+	const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count();
+
+	if(elapsed >= testTime)
+			{
+				return 1;
+			}
+
+	uint64_t nodes = 0;
+
+	const std::vector<uint32_t> moves = MoveGeneration::GetAllPseudoMoves(*game.CurrentState);
+	for (unsigned const int& move : moves)
+	{
+		if (game.ExecuteMove(move))
+		{
+			const uint64_t prevNodes = Speed(depth -1, game, start, testTime);
+			nodes += prevNodes;
+			game.ReverseMove();
+		}
+	}
+	return nodes;
 }

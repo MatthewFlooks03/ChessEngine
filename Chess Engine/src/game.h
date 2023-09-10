@@ -10,6 +10,11 @@ public:
 
 	Game();
 	explicit Game(const std::string& fen);
-
 	~Game();
+
+	std::string GetFen() const;
+
+private:
+	uint32_t HalfMoveCount;
+	uint32_t FullMoveCount;
 };
